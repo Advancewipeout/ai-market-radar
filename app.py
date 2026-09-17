@@ -25,15 +25,16 @@ col1, col2 = st.columns(2)
 with st.spinner("⚡ Pulling real-time market matrices..."):
     # Fetch currency exchange metrics securely
     try:
-        fx_data = yf.download("CADUSD=X", period="1d", progress=False)
-        usd_to_cad = 1.0 / float(fx_data["Close"].iloc[-1])
+        fx_data = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
+        usd_to_cad = 1.0 / float(fx_data["Close"].to_numpy().flatten()[-1])
     except:
         usd_to_cad = 1.36
 
     for index, ticker in enumerate(watchlist):
         try:
-            # Clean single-line download protocol
-            df = yf.download(ticker, period="30d", interval="1d", progress=False)
+            # Clean single-line download protocol forcing columns to flatten out completely
+            df = yf.download(ticker, period="30d", interval="1d", progress=False, multi_level_index=False)
+            df.columns = [str(col).strip().capitalize() for col in df.columns]
             
             # Extract data rows safely without table conflicts
             close_array = df["Close"].to_numpy().flatten()
@@ -80,8 +81,9 @@ with st.spinner("⚡ Pulling real-time market matrices..."):
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Plot the clean historical trend chart
+                # CHART LAYER CORRECTION PATCH: Forces strict clean 1D formatting for charts
                 chart_df = pd.DataFrame(df["Close"].tail(30))
+                chart_df.columns = ["Close"]
                 if is_us_stock:
                     chart_df["Close"] *= usd_to_cad
                 st.line_chart(chart_df)
@@ -92,7 +94,6 @@ with st.spinner("⚡ Pulling real-time market matrices..."):
 st.markdown("---")
 st.caption("🤖 High-Velocity Trend Verification Pipeline actively updating on an automated live loop.")
 
-# 3. BUILT-IN AUTOMATED TIMER: 
-# Wait 30 seconds, then tell the website to automatically re-run its data pulls hands-free!
+# Wait 30 seconds, then loop refresh completely hands-free
 time.sleep(30)
 st.rerun()
