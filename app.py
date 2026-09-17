@@ -86,7 +86,6 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# FULL Watchlist Configuration restored!
 watchlist = {
     "BTC-CAD": "🪙 BTC-CAD (Bitcoin)",
     "ETH-CAD": "💎 ETH-CAD (Ethereum)",
@@ -166,7 +165,7 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
         except Exception as e:
             st.error(f"⚠️ Vector alignment glitch on {ticker}: {e}")
 
-# 3. ADVANCED LEARNING CHATBOX (WITH FULL LOGIC CAPABILITIES)
+# 3. ADVANCED LEARNING CHATBOX (INTEGRATED WITH NEURAL CLOUD AI)
 st.markdown("---")
 st.header("💬 ADVANCE LEARNING CHAT INTERFACE")
 st.caption("Ask questions about market indicators, strategies, or crypto setups below.")
@@ -189,26 +188,24 @@ if submit_button and user_input_text:
         st.write(user_input_text)
         
     with st.chat_message("assistant"):
-        p_map = st.session_state.get("live_prices_cache", {})
-        q = user_input_text.lower().strip()
-        
-        # COMPLETE EXTENDED DICTIONARY SET
-        btc_p = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD', 0):,.2f} CAD** based on our active data feed updates."
-        eth_p = f"The live price of Ethereum is currently **${p_map.get('ETH-CAD', 0):,.2f} CAD** synced in real-time."
-        sol_p = f"The live price of Solana is currently **${p_map.get('SOL-CAD', 0):,.2f} CAD** synced in real-time."
-        nvda_p = f"NVIDIA Corp (NVDA) is trading at a currency-converted value of **${p_map.get('NVDA', 0):,.2f} CAD**."
-        tsla_p = f"Tesla Inc (TSLA) is trading at a currency-converted value of **${p_map.get('TSLA', 0):,.2f} CAD**."
-        sl_def = "A Stop-Loss is an automated protective floor price order that automatically sells your asset if the price drops, guaranteeing your cash investment capital stays safe from massive market drops."
-        buy_def = "The system triggers a green Strong Buy action signal when the 5-day multi-variable momentum vectors break cleanly above our +0.50% volatility baseline with positive confirmation."
-        hold_def = "A Hold action signal indicates that the asset's price is currently moving inside a flat baseline consolidation channel. The system advises waiting until a volume-backed breakout happens."
-        hi_msg = "Hello! Welcome to the Advance Matrix system network. Ask me anything about our live indicators, strategies, or current prices!"
-        fallback_msg = "Welcome to the Advance Matrix node. Ask me about specific ticker prices, stop-loss tools, or our indicator signals!"
-
-        ai_reply = fallback_msg
-        
-        if "bitcoin" in q or "btc" in q:
-            ai_reply = btc_p
-        if "ethereum" in q or "eth" in q:
-            ai_reply = eth_p
-        if "solana" in q or "sol" in q:
-            ai_reply = sol_p
+        with st.spinner("Analyzing question query parameters..."):
+            p_map = st.session_state.get("live_prices_cache", {})
+            market_context_data = f"Bitcoin: ${p_map.get('BTC-CAD',0):,.2f} CAD, Ethereum: ${p_map.get('ETH-CAD',0):,.2f} CAD, Solana: ${p_map.get('SOL-CAD',0):,.2f} CAD, NVIDIA: ${p_map.get('NVDA',0):,.2f} CAD, Tesla: ${p_map.get('TSLA',0):,.2f} CAD, Aecon: ${p_map.get('ARE.TO',0):,.2f} CAD."
+            
+            # Fetch the secure key from Streamlit vault environment
+            api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
+            
+            if api_key_target == "WIPE":
+                # Static internal fallback dictionary if keys are not configured yet
+                q = user_input_text.lower().strip()
+                ai_reply = "Welcome to the Advance Matrix node. Connect your Groq API key in your Cloud dashboard panel to activate unscripted neural conversations!"
+                if "bitcoin" in q or "btc" in q:
+                    ai_reply = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD', 0):,.2f} CAD** based on our active data feed updates."
+                if "ethereum" in q or "eth" in q:
+                    ai_reply = f"The live price of Ethereum is currently **${p_map.get('ETH-CAD', 0):,.2f} CAD** synced in real-time."
+                if "nvidia" in q or "nvda" in q:
+                    ai_reply = f"NVIDIA Corp (NVDA) is trading at a currency-converted value of **${p_map.get('NVDA', 0):,.2f} CAD**."
+                if "tesla" in q or "tsla" in q:
+                    ai_reply = f"Tesla Inc (TSLA) is trading at a currency-converted value of **${p_map.get('TSLA', 0):,.2f} CAD**."
+                if "stop loss" in q or "floor" in q:
+                    ai_reply = "A Stop-Loss is an automated protective floor price order that automatically sells your asset if the price drops, guaranteeing your cash investment capital stays safe from massive market drops."
