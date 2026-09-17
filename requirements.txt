@@ -4,4 +4,4 @@ pandas
 numpy
 torch
 scikit-learn
-text streamlit-autofresh
+text streamlit-autorefresh
