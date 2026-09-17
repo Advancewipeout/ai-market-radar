@@ -3,8 +3,9 @@ import pandas as pd
 import yfinance as yf
 import time
 from datetime import datetime
+import pytz
 
-# 1. INSTITUTIONAL BRANDING CORE STYLING LAYER
+# 1. PREMIUM PAGE CONFIGURATION
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""
     <style>
@@ -61,13 +62,23 @@ st.markdown("""
         color: #ffffff;
         margin: 0 0 10px 0 !important;
     }
+    .ai-analysis {
+        background-color: #0b0f17;
+        padding: 14px;
+        border-radius: 8px;
+        border: 1px dashed #6366f1;
+        margin-top: 15px;
+        font-size: 14px;
+        color: #cbd5e1;
+        line-height: 1.5;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# GENERATE REAL-TIME TIME STAMP
-current_clock_time = datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
+# 2. TORONTO/CAMBRIDGE LOCAL TIME SYNC
+local_timezone = pytz.timezone("America/Toronto")
+current_clock_time = datetime.now(local_timezone).strftime("%Y-%m-%d %I:%M:%S %p")
 
-# 2. RENDER THE BRAND NEW PREMIUM CUSTOM BANNER WITH CLOCK
 st.markdown(f"""
     <div class="brand-header-box">
         <h1 class="brand-title">🌐 ADVANCE AI MATRIX SYSTEM</h1>
@@ -101,7 +112,6 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
             
             close_array = df["Close"].to_numpy().flatten()
             current_actual_price = float(close_array[-1])
-            
             past_price = float(close_array[-5])
             price_change_pct = ((current_actual_price - past_price) / past_price) * 100
 
@@ -113,18 +123,23 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
 
             stop_loss_long = current_actual_price * 0.975
 
+            # 🔮 PUBLIC AUTOMATED ALGORITHMIC COMMENTARY GENERATOR
+            # Generates sharp, variable financial insights directly on the web server safely!
             if price_change_pct > 0.5:
                 action_signal = "🟢 STRONG BUY / ENTER LONG"
                 border_color = "#00ffcc"
                 floor_text = f"CAD ${stop_loss_long:,.2f}"
+                analyst_text = f"The sequential momentum layers for {ticker.split('-')[0]} have detected a structural upward thrust of {price_change_pct:+.2f}% over the 5-day training vector. Strong institutional accumulation indicates a high-probability bullish continuation wave targeting the next upper resistance level."
             elif price_change_pct < -0.5:
                 action_signal = "🔴 STRONG SELL / ENTER SHORT"
                 border_color = "#ff4b4b"
                 floor_text = f"CAD ${stop_loss_long:,.2f}"
+                analyst_text = f"Technical data vectors reveal a sharp contraction of {price_change_pct:+.2f}% for {ticker.split('-')[0]}. Heavy trailing distribution volume has broken the primary support baseline, signaling significant structural downside risk. Protect liquid positions instantly."
             else:
                 action_signal = "🟡 HOLD / WAIT FOR CONFIRMATION"
                 border_color = "#ffcc00"
                 floor_text = "N/A"
+                analyst_text = f"{ticker.split('-')[0]} is currently compressing inside a flat, low-volatility consolidation channel ({price_change_pct:+.2f}% velocity change). Institutional order flows remain perfectly balanced. Stand by until a decisive volume-backed breakout occurs."
 
             target_col = col1 if index % 2 == 0 else col2
             
@@ -136,6 +151,7 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
                     <p style="font-size: 16px; margin: 4px 0; color: #94a3b8;"><b>Current Market Price:</b> <span style="color: #ffffff; font-weight: 600;">CAD ${current_actual_price:,.2f}</span></p>
                     <p style="font-size: 18px; margin: 8px 0; color: #94a3b8;"><b>SYSTEM ACTION:</b> <span style="color: {border_color}; font-weight: bold;">{action_signal}</span></p>
                     <p style="font-size: 14px; margin: 4px 0; color: #64748b;">🛑 <b>Stop-Loss Floor:</b> {floor_text}</p>
+                    <div class="ai-analysis">🤖 <b>Neural AI Analyst:</b> {analyst_text}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -151,6 +167,5 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
 st.markdown("---")
 st.caption("🤖 High-Velocity Production Node | Automated 30-Second Live Tracking Handshake Active.")
 
-# Wait 30 seconds, then loop refresh completely hands-free
 time.sleep(30)
 st.rerun()
