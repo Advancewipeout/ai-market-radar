@@ -2,7 +2,7 @@ import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time, json, u
 from datetime import datetime
 import pytz
 
-# 1. VISUAL LAYER LAYER STYLING MATRIX (WITH GRADIENT MOVEMENT ENGINE)
+# 1. PREMIUM HEADER & ANIMATED GRADIENT BORDER LAYOUT MATRIX
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""
     <style>
@@ -43,7 +43,7 @@ watchlist = {"BTC-CAD": "🪙 BTC-CAD (Bitcoin)", "ETH-CAD": "💎 ETH-CAD (Ethe
 if "live_prices_cache" not in st.session_state: st.session_state.live_prices_cache = {}
 if "chat_history_matrix" not in st.session_state: st.session_state.chat_history_matrix = []
 
-@st.cache_data(ttl=5)
+@st.cache_data(ttl=3)
 def get_live_market_vectors():
     try:
         fx_df = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
@@ -60,15 +60,24 @@ def get_live_market_vectors():
                 if ticker in ["NVDA", "TSLA"]: price *= u_to_c
                 pct = ((price - float(close_arr[-5])) / float(close_arr[-5])) * 100
                 target_p = price * (1.0 + (pct * 0.05 / 100))
-                sig, color = ("🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00") if abs(pct) <= 0.5 else (("🟢 STRONG BUY / ENTER LONG", "#00ffcc") if pct > 0.5 else ("🔴 STRONG SELL / ENTER SHORT", "#ff4b4b"))
-                tp_text, sl_text = (f"CAD ${target_p:,.2f}", f"CAD ${price * 0.975:,.2f}" if pct > 0.5 else f"CAD ${price * 1.025:,.2f}") if abs(pct) > 0.5 else ("N/A", "N/A")
+                
+                if pct > 0.5:
+                    sig, color = "🟢 STRONG BUY / ENTER LONG", "#00ffcc"
+                    tp_text, sl_text = f"CAD ${target_p:,.2f}", f"CAD ${price * 0.975:,.2f}"
+                elif pct < -0.5:
+                    sig, color = "🔴 STRONG SELL / ENTER SHORT", "#ff4b4b"
+                    tp_text, sl_text = f"CAD ${target_p:,.2f}", f"CAD ${price * 1.025:,.2f}"
+                else:
+                    sig, color = "🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00"
+                    tp_text, sl_text = "N/A", "N/A"
+                    
                 glow_class = "glow-hold" if abs(pct) <= 0.5 else ("glow-buy" if pct > 0.5 else "glow-sell")
                 store[ticker] = {"display_name": display_name, "price": price, "target": target_p, "pct": pct, "sig": sig, "color": color, "tp": tp_text, "sl": sl_text, "df": df, "glow": glow_class}
         except: pass
     return store
 
-# 🚀 AUTOMATED DEPLOYMENT THREAD CONTAINER: RUNS THE SECONDS TICK & LIVE PRICING AS ONE
-@st.fragment(run_every=1.0)
+# 🚀 PACER UNLOCKED: EXACTLY 3 SECONDS FOR EXTREME HIGH-SPEED LIVE VIBES
+@st.fragment(run_every=3.0)
 def render_live_matrix_grid():
     clock = datetime.now(pytz.timezone("America/Toronto")).strftime("%Y-%m-%d %I:%M:%S %p")
     st.markdown(f"""
@@ -116,7 +125,7 @@ def render_live_matrix_grid():
                 """, unsafe_allow_html=True)
                 st.line_chart(pd.DataFrame(data['df']["Close"].tail(30)))
 
-# Render live dashboard metrics
+# Paint layout metrics
 render_live_matrix_grid()
 
 api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
@@ -133,7 +142,3 @@ with st.form(key="chat_secure_form", clear_on_submit=True):
 
 if submit_button and user_input_text:
     st.session_state.chat_history_matrix.append({"role": "user", "content": user_input_text})
-    with st.chat_message("user"): st.write(user_input_text)
-    with st.chat_message("assistant"):
-        p_map = st.session_state.live_prices_cache
-        q = user_input_text.lower().strip()
