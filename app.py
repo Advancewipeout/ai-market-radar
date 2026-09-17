@@ -43,7 +43,7 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
 
 # 3. MEMORY-ANCHORED DEEP LEARNING CHATBOX INTERFACE
 st.markdown("---")
-st.header("💬 ADVANCE LEARNING CHAT INTERFACE")
+st.header("💬 SMITTY'S LEARNING CHAT INTERFACE")
 for chat in st.session_state.chat_history_matrix:
     with st.chat_message(chat["role"]): st.write(chat["content"])
 
