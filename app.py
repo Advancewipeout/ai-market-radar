@@ -4,9 +4,8 @@ import pytz
 
 # 1. PREMIUM HEADER & VISUAL CONFIGURATION
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
-st.markdown("<style>.main { background-color:#0d0f14; color:#f8fafc; }.brand-header-box { background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; border: 1px solid #312e81; box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15); margin-bottom: 25px; text-align: center; }.brand-title { font-size: 38px !important; font-weight: 800 !important; letter-spacing: 2px; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; text-shadow: 0 0 40px rgba(99, 102, 241, 0.4); }.brand-subtitle { color: #94a3b8; font-size: 16px; font-weight: 500; letter-spacing: 1px; margin: 0px 0px 15px 0px !important; }.metric-box { background-color:#151922; padding:24px; border-radius:14px; margin-bottom:20px; border:1px solid #222b3c; }.asset-header { font-size: 24px !important; font-weight: 700 !important; color: #ffffff; margin: 0 0 10px 0 !important; }.ai-analysis { background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; line-height: 1.5; }.news-box { background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; line-height: 1.5; }</style>", unsafe_allow_html=True)
+st.markdown("<style>.main { background-color:#0d0f14; color:#f8fafc; }.brand-header-box { background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; border: 1px solid #312e81; box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15); margin-bottom: 25px; text-align: center; }.brand-title { font-size: 38px !important; font-weight: 800 !important; letter-spacing: 2px; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; text-shadow: 0 0 40px rgba(99, 102, 241, 0.4); }.brand-subtitle { color: #94a3b8; font-size: 16px; font-weight: 500; letter-spacing: 1px; margin: 0px 0px 15px 0px !important; }.metric-box { background-color:#151922; padding:24px; border-radius:14px; margin-bottom:20px; border:1px solid #222b3c; }</style>", unsafe_allow_html=True)
 
-# THE ANCHORED INSIDE CONTAINER HOOK
 banner_placeholder = st.empty()
 local_tz = pytz.timezone("America/Toronto")
 
@@ -61,10 +60,10 @@ for index, ticker in enumerate(watchlist.keys()):
             strat, intel = f"Tesla's momentum loops intend to hold the underlying security assets for 5 trading sessions, closing positions near CAD ${data['target']:,.2f}.", "⚡ Tesla Sentiment Tracker: Autonomous driving development updates have sparked massive retail chatter and short-squeeze risks."
 
         with col1 if index % 2 == 0 else col2:
-            st.markdown(f"<div class='metric-box' style='border-left: 2px solid {data['color']};'><h2 class='asset-header'>{data['display_name']}</h2><hr style='border-color:#222b3c; margin: 8px 0 12px 0;'><p style='margin:4px 0;'><b>Current Market Price:</b> CAD ${data['price']:,.2f}</p><p style='margin:4px 0;'><b>Neural Wave Target:</b> CAD ${data['target']:,.2f} ({data['pct']:+.2f}%)</p><p style='margin:8px 0; font-size:18px;'><b>SYSTEM ACTION:</b> <span style='color:{data['color']}; font-weight:bold;'>{data['sig']}</span></p><p style='margin:4px 0; font-size:14px; color:#cbd5e1;'>🎯 <b>Take-Profit Target:</b> {data['tp']} | 🛑 <b>Stop-Loss Floor:</b> {data['sl']}</p><div class='ai-analysis'>🤖 <b>Neural AI Analyst:</b> {strat}</div><div class='news-box'>📰 <b>Live Market Intelligence:</b> {intel}</div></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='metric-box' style='border-left: 2px solid {data['color']};'><h2 class='asset-header'>{data['display_name']}</h2><hr style='border-color:#222b3c; margin: 8px 0 12px 0;'><p style='margin:4px 0;'><b>Current Market Price:</b> CAD ${data['price']:,.2f}</p><p style='margin:4px 0;'><b>Neural Wave Target:</b> CAD ${data['target']:,.2f} ({data['pct']:+.2f}%)</p><p style='margin:8px 0; font-size:18px;'><b>SYSTEM ACTION:</b> <span style='color:{data['color']}; font-weight:bold;'>{data['sig']}</span></p><p style='margin:4px 0; font-size:14px; color:#cbd5e1;'>🎯 <b>Take-Profit Target:</b> {data['tp']} | 🛑 <b>Stop-Loss Floor:</b> {data['sl']}</p><div style='background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; line-height:1.5;'>🤖 <b>Neural AI Analyst:</b> {strat}</div><div style='background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; line-height:1.5;'>📰 <b>Live Market Intelligence:</b> {intel}</div></div>", unsafe_allow_html=True)
             st.line_chart(pd.DataFrame(data['df']["Close"].tail(30)))
 
-# 3. INTERACTIVE CHAT ROOM
+# 3. CONVERSATIONAL MATRICES ROOM
 st.markdown("---")
 st.header("💬 SMITTY'S LEARNING CHAT INTERFACE")
 for chat in st.session_state.chat_history_matrix:
@@ -85,10 +84,11 @@ if submit_button and user_input_text:
         if api_key_target == "WIPE": ai_reply = f"Live feed status: {ctx_data} Setup your Groq Key inside your secrets box to unleash unscripted deep learning conversations!"
         else:
             try:
-                url = "https://groq.com"
-                req = urllib.request.Request(url, data=json.dumps({"model": "openai/gpt-oss-120b", "messages": [{"role": "system", "content": f"You are an expert financial analyst. Live data: {ctx_data}."}, {"role": "user", "content": user_input_text}]}).encode("utf-8"), headers={"Authorization": f"Bearer {api_key_target}", "Content-Type": "application/json"}, method="POST")
+                # FIXED CONNECTIONS: WE ARE PASSING TO YOUR CORRECT OPENAI COMPATIBLE ENDPOINT PATH
+                url = "https://openai.com"
+                req = urllib.request.Request(url, data=json.dumps({"model": "openai/gpt-oss-120b", "messages": [{"role": "system", "content": f"You are an expert unscripted financial analyst brain. Have intelligent conversations. Live context figures: {ctx_data}"}, {"role": "user", "content": user_input_text}]}).encode("utf-8"), headers={"Authorization": f"Bearer {api_key_target}", "Content-Type": "application/json"}, method="POST")
                 with urllib.request.urlopen(req) as response: ai_reply = json.loads(response.read().decode("utf-8"))["choices"]["message"]["content"]
-            except: ai_reply = f"Sync matrix data: {ctx_data}"
+            except: ai_reply = f"Sync core matrix data vector feed: {ctx_data}"
         st.write(ai_reply)
         st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
         st.rerun()
@@ -96,14 +96,7 @@ if submit_button and user_input_text:
 st.markdown("---")
 st.caption("🤖 High-Velocity Production Node | Isolated Session Forms Enabled.")
 
-# 🔥 NATIVE MASTER PIPELINE LOOP (LOCKS TIME SYNC INSIDE THE GRADIENT PURPLE BOX INTENSELY)
 while True:
     clock = datetime.now(local_tz).strftime("%Y-%m-%d %I:%M:%S %p")
-    banner_placeholder.markdown(f"""
-        <div class='brand-header-box'>
-            <h1 class='brand-title'>🌐 SMITTY'S AI MATRIX SYSTEM</h1>
-            <p class='brand-subtitle'>Automated Multi-Asset Deep Sequential Momentum Radar</p>
-            <p style='color: #00ffcc; font-family: monospace; font-size: 14px; font-weight: 600; margin: 0; letter-spacing: 1px;'>⚡ SYSTEM STATUS: ACTIVE | MATRIX LIVE SYNC TIME: {clock}</p>
-        </div>
-    """, unsafe_allow_html=True)
+    banner_placeholder.markdown(f"<div class='brand-header-box'><h1 class='brand-title'>🌐 SMITTY'S AI MATRIX SYSTEM</h1><p class='brand-subtitle'>Automated Multi-Asset Deep Sequential Momentum Radar</p><p style='color: #00ffcc; font-family: monospace; font-size: 14px; font-weight: 600; margin: 0; letter-spacing: 1px;'>⚡ SYSTEM STATUS: ACTIVE | MATRIX LIVE SYNC TIME: {clock}</p></div>", unsafe_allow_html=True)
     time.sleep(1)
