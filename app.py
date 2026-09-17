@@ -69,7 +69,7 @@ if submit_button and user_input_text:
             try:
                 from groq import Groq
                 client = Groq(api_key=api_key_target)
-                completion = client.chat.completions.create(model="llama3-8b-8192", messages=[{"role": "system", "content": f"You are a premium financial analyst assistant. Answer questions naturally, beautifully, and creatively. Real-time market context values: {ctx_data}. Limit response to 2 short sentences."}, {"role": "user", "content": user_input_text}])
+                completion = client.chat.completions.create(model="llama-3.3-70b-versatiles", messages=[{"role": "system", "content": f"You are a premium financial analyst assistant. Answer questions naturally, beautifully, and creatively. Real-time market context values: {ctx_data}. Limit response to 2 short sentences."}, {"role": "user", "content": user_input_text}])
                 ai_reply = completion.choices[0].message.content
             except Exception as e:
                 ai_reply = f"Neural handshake lag: {e}"
