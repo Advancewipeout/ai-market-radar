@@ -13,16 +13,23 @@ watchlist = {"BTC-CAD": "🪙 BTC-CAD (Bitcoin)", "ETH-CAD": "💎 ETH-CAD (Ethe
 if "live_prices_cache" not in st.session_state: st.session_state.live_prices_cache = {}
 if "chat_history_matrix" not in st.session_state: st.session_state.chat_history_matrix = []
 
+# Rate-limit defense mechanism: cached data downloader function
+@st.cache_data(ttl=120)
+def fetch_ticker_data_safely(ticker):
+    try:
+        return yf.download(ticker, period="30d", interval="1d", progress=False, multi_level_index=False)
+    except: return None
+
 try:
-    fx = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
-    usd_to_cad = 1.0 / float(fx["Close"].to_numpy().flatten()[-1])
+    fx_df = fetch_ticker_data_safely("CADUSD=X")
+    usd_to_cad = 1.0 / float(fx_df["Close"].to_numpy().flatten()[-1]) if fx_df is not None else 1.36
 except: usd_to_cad = 1.36
 
 market_summary_list, asset_data_store = [], {}
-with st.spinner("📥 Synchronizing core market pricing vectors..."):
-    for ticker, display_name in watchlist.items():
+for ticker, display_name in watchlist.items():
+    df = fetch_ticker_data_safely(ticker)
+    if df is not None and not df.empty:
         try:
-            df = yf.download(ticker, period="30d", interval="1d", progress=False, multi_level_index=False)
             df.columns = [str(c).strip().capitalize() for col in [df.columns] for c in col]
             close_arr = df["Close"].to_numpy().flatten()
             price = float(close_arr[-1])
@@ -33,23 +40,23 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
             stop_long, stop_short = price * 0.975, price * 1.025
             sig, color = ("🟡 HOLD", "#ffcc00") if abs(pct) <= 0.5 else (("🟢 BUY", "#00ffcc") if pct > 0.5 else ("🔴 SELL", "#ff4b4b"))
             tp_text, sl_text = (f"CAD ${target_price:,.2f}", f"CAD ${stop_long:,.2f}" if pct > 0.5 else f"CAD ${stop_short:,.2f}") if abs(pct) > 0.5 else ("N/A", "N/A")
-            market_summary_list.append(f"{ticker} ({display_name}): price=${price:,.2f}, move={pct:+.2f}%, action={sig}, target=${target_price:,.2f}")
+            market_summary_list.append(f"{ticker}: price=${price:,.2f}, move={pct:+.2f}%, action={sig}, target=${target_price:,.2f}")
             asset_data_store[ticker] = {"display_name": display_name, "price": price, "target": target_price, "pct": pct, "sig": sig, "color": color, "tp": tp_text, "sl": sl_text, "df": df}
         except: pass
 
-# 2. PRO-TIER FLAT BUNDLED DECODER LOOP FOR NO CARD LAG
+# 2. BULLETPROOF FLAT BUNDLED GROQ DATA EXTRACTION COUPLING
 api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
 ai_strat_list, ai_intel_list = [], []
 
 if api_key_target != "WIPE" and market_summary_list:
     try:
         url = "https://groq.com"
-        master_prompt = f"Act as an automated asset portfolio engine. For each asset, you must generate TWO things in order: 1) a clear holding sentence explaining exactly how long the model intends to hold the asset and at what price target it will execute a sell order, 2) a separate brief market update or news trend summary (like social media/Twitter sentiment) for that coin right now. Speak directly to platform users. Return the output strictly as a valid raw JSON object matching this schema: {{\"strategy_sentences\": [\"strat 1\", \"strat 2\", \"strat 3\", \"strat 4\", \"strat 5\", \"strat 6\"], \"intelligence_sentences\": [\"intel 1\", \"intel 2\", \"intel 3\", \"intel 4\", \"intel 5\", \"intel 6\"]}}. Keep array items in order. Market data: {', '.join(market_summary_list)}"
+        headers = {"Authorization": f"Bearer {api_key_target}", "Content-Type": "application/json"}
+        master_prompt = f"Act as an automated asset portfolio tracking system. For each asset, you must generate TWO separate elements in order: 1) a clear holding sentence explaining exactly how long the model intends to hold the asset and at what price target it will execute a sell order, 2) a separate brief market update or news trend summary (like social media/Twitter sentiment) for that coin right now. Speak directly to platform users following your trades as a copy-trade tracker guide. Return the output strictly as a valid raw JSON object matching this schema: {{\"strategy_sentences\": [\"strat 1\", \"strat 2\", \"strat 3\", \"strat 4\", \"strat 5\", \"strat 6\"], \"intelligence_sentences\": [\"intel 1\", \"intel 2\", \"intel 3\", \"intel 4\", \"intel 5\", \"intel 6\"]}}. Keep array items in order. Market data: {', '.join(market_summary_list)}"
         
-        req = urllib.request.Request(url, data=json.dumps({"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": master_prompt}], "response_format": {"type": "json_object"}}).encode("utf-8"), headers={"Authorization": f"Bearer {api_key_target}", "Content-Type": "application/json"}, method="POST")
+        req = urllib.request.Request(url, data=json.dumps({"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": master_prompt}], "response_format": {"type": "json_object"}}).encode("utf-8"), headers=headers, method="POST")
         with urllib.request.urlopen(req) as r:
             res_json = json.loads(r.read().decode("utf-8"))
-            # High-performance key extraction safeguard
             raw_ai_text = res_json["choices"][0]["message"]["content"] if "choices" in res_json else res_json["message"]["content"]
             ai_data = json.loads(raw_ai_text)
             ai_strat_list = ai_data.get("strategy_sentences", [])
@@ -80,7 +87,7 @@ for index, ticker in enumerate(watchlist.keys()):
             """, unsafe_allow_html=True)
             st.line_chart(pd.DataFrame(data['df']["Close"].tail(30)))
 
-# 3. INTERACTIVE CHAT ROOM
+# 3. CONVERSATIONAL MATRICES ROOM
 st.markdown("---")
 st.header("💬 SMITTY'S LEARNING CHAT INTERFACE")
 for chat in st.session_state.chat_history_matrix:
@@ -102,9 +109,18 @@ if submit_button and user_input_text:
             else:
                 try:
                     url = "https://groq.com"
-                    req = urllib.request.Request(url, data=json.dumps({"model": "openai/gpt-oss-120b", "messages": [{"role": "system", "content": f"You are an expert financial analyst. Answer user questions naturally. Live data: {ctx_data}. Max 2 short sentences."}, {"role": "user", "content": user_input_text}]}).encode("utf-8"), headers={"Authorization": f"Bearer {api_key_target}", "Content-Type": "application/json"}, method="POST")
-                    with urllib.request.urlopen(req) as response: 
+                    headers = {"Authorization": f"Bearer {api_key_target}", "Content-Type": "application/json"}
+                    req = urllib.request.Request(url, data=json.dumps({"model": "openai/gpt-oss-120b", "messages": [{"role": "system", "content": f"You are an expert financial analyst. Answer user questions naturally. Live data: {ctx_data}. Max 2 short sentences."}, {"role": "user", "content": user_input_text}]}).encode("utf-8"), headers=headers, method="POST")
+                    with urllib.request.urlopen(req) as response:
                         res_d = json.loads(response.read().decode("utf-8"))
                         ai_reply = res_d["choices"][0]["message"]["content"] if "choices" in res_d else res_d["message"]["content"]
-                except Exception as e: ai_reply = f"Neural handshake lag: {e}"
+                except Exception as e: 
+                    ai_reply = f"Neural handshake lag: {e}"
             st.write(ai_reply)
+            st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
+            st.rerun()
+
+st.markdown("---")
+st.caption("🤖 High-Velocity Production Node | Isolated Session Forms Enabled.")
+time.sleep(30)
+st.rerun()
