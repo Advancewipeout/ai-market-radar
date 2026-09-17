@@ -47,17 +47,20 @@ with st.spinner("📥 Synchronizing market matrices & prompting cloud AI nodes..
                 sig, color = "🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00"
                 tp_text, sl_text = "N/A", "N/A"
 
-            # ☁️ CLOCK CARD NEURAL COUPLING ROUTING LAYER
+            # ☁️ CLOCK CARD NEURAL COUPLING ROUTING LAYER (WITH ANTI-CACHE COUPLING)
             if api_key_target == "WIPE":
                 txt = f"Consolidation channels are active for {ticker} ({pct:+.2f}% velocity change). Institutional parameters indicate baseline market balancing."
             else:
                 try:
                     from groq import Groq
                     client = Groq(api_key=api_key_target)
-                    card_prompt = f"Write a single sentence of highly technical financial commentary analyzing the asset {ticker} based on a 5-day move of {pct:+.2f}%. Act as a professional quant trader. Do not repeat the prompt."
                     completion = client.chat.completions.create(
                         model="llama-3.3-70b-specdec",
-                        messages=[{"role": "user", "content": card_prompt}]
+                        messages=[
+                            {"role": "system", "content": f"You are a professional quantitative trading bot. Write a unique, specific analysis line for the requested token. Current focus ticker: {ticker}."},
+                            {"role": "user", "content": f"Write a single sentence of professional financial commentary analyzing the asset ticker symbol {ticker} based on its 5-day move of {pct:+.2f}%. Focus only on this asset. Do not repeat the prompt or introduction."}
+                        ],
+                        temperature=0.75  # Forces the AI to generate a distinct, creative answer every loop pass
                     )
                     txt = completion.choices[0].message.content
                 except Exception as e:
