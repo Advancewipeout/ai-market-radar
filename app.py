@@ -19,7 +19,6 @@ try:
 except:
     usd_to_cad = 1.36
 
-# Gather numbers and cache structures upfront
 market_summary_list = []
 asset_data_store = {}
 
@@ -47,37 +46,41 @@ with st.spinner("📥 Synchronizing master asset pricing vectors..."):
                 sig, color = "🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00"
                 tp_text, sl_text = "N/A", "N/A"
 
-            market_summary_list.append(f"{ticker}: price=${price:,.2f}, 5day_move={pct:+.2f}%")
+            market_summary_list.append(f"Asset name: {display_name}, current_price=${price:,.2f}, 5day_move={pct:+.2f}%")
             asset_data_store[ticker] = {"display_name": display_name, "price": price, "target": target_price, "pct": pct, "sig": sig, "color": color, "tp": tp_text, "sl": sl_text, "df": df}
         except:
             pass
 
-# 2. RUN ONE SINGLE MASTER BUNDLED GROQ CALL FOR ALL CARDS AT ONCE
+# 2. RUN BULLETPROOF LIST-BASED BUNDLED GROQ CALL
 api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
-ai_analysis_dict = {}
+ai_analysis_list = []
 
 if api_key_target != "WIPE" and market_summary_list:
     try:
         from groq import Groq
         client = Groq(api_key=api_key_target)
-        master_prompt = f"Act as an elite quantitative trader. Write a brief, single unique analysis sentence for each of these 6 assets based on their numbers. Return the result strictly as a valid raw JSON object matching this schema: {{\"ticker_symbol\": \"analysis sentence\"}}. Market data: {', '.join(market_summary_list)}"
+        master_prompt = f"Act as an elite financial analyst. Write a unique, single professional analysis line for each of these 6 assets based on their performance numbers. Return the output strictly as a valid raw JSON object matching this schema: {{\"sentences\": [\"sentence 1 for item 1\", \"sentence 2 for item 2\", \"sentence 3 for item 3\", \"sentence 4 for item 4\", \"sentence 5 for item 5\", \"sentence 6 for item 6\"]}}. Keep the array items in the exact order requested. Market data: {', '.join(market_summary_list)}"
         
         completion = client.chat.completions.create(
             model="llama-3.3-70b-specdec",
             messages=[{"role": "user", "content": master_prompt}],
             response_format={"type": "json_object"}
         )
-        ai_analysis_dict = json.loads(completion.choices.message.content)
+        ai_analysis_list = json.loads(completion.choices.message.content).get("sentences", [])
     except:
         pass
 
-# Render the layout columns flawlessly
+# Render columns with flat array verification loops
 col1, col2 = st.columns(2)
 for index, ticker in enumerate(watchlist.keys()):
     if ticker in asset_data_store:
         data = asset_data_store[ticker]
-        # Pull the custom unscripted sentence generated for this asset, fallback if lag occurs
-        txt = ai_analysis_dict.get(ticker, f"The sequential momentum layers for {ticker} have detected structural parameter adjustments of {data['pct']:+.2f}% over the trailing training vector.")
+        
+        # Sequentially map the exact index from the list to avoid dictionary key errors
+        try:
+            txt = ai_analysis_list[index]
+        except:
+            txt = f"The sequential momentum layers for {ticker} have detected structural parameter adjustments of {data['pct']:+.2f}% over the trailing training vector."
         
         with col1 if index % 2 == 0 else col2:
             st.markdown(f"""
