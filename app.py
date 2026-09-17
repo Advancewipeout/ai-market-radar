@@ -1,8 +1,8 @@
-import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time
+import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time, os
 from datetime import datetime
 import pytz
 
-# 1. PREMIUM NEON STYLING AND TIME CONFIGURATION
+# 1. PREMIUM HEADER & VISUAL CONFIGURATION
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("<style>.main { background-color:#0d0f14; color:#f8fafc; }.metric-box { background-color:#151922; padding:24px; border-radius:14px; border-left:6px solid #6366f1; margin-bottom:20px; border:1px solid #222b3c; }.ai-analysis { background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; }</style>", unsafe_allow_html=True)
 
@@ -13,7 +13,6 @@ watchlist = {"BTC-CAD": "🪙 BTC-CAD (Bitcoin)", "ETH-CAD": "💎 ETH-CAD (Ethe
 if "live_prices_cache" not in st.session_state: st.session_state.live_prices_cache = {}
 if "chat_history_matrix" not in st.session_state: st.session_state.chat_history_matrix = []
 
-# 2. RENDER THE 6 GLOWING ASSET CONTAINERS
 col1, col2 = st.columns(2)
 try:
     fx = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
@@ -41,7 +40,7 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
         except Exception as e:
             st.error(f"⚠️ Vector glitch on {ticker}: {e}")
 
-# 3. MEMORY-ANCHORED DEEP LEARNING CHATBOX INTERFACE
+# 2. INTUITIVE MEMORY CHAT ROOM INTERFACE LAYER
 st.markdown("---")
 st.header("💬 SMITTY'S LEARNING CHAT INTERFACE")
 for chat in st.session_state.chat_history_matrix:
@@ -70,7 +69,7 @@ if submit_button and user_input_text:
             try:
                 from groq import Groq
                 client = Groq(api_key=api_key_target)
-                completion = client.chat.completions.create(model="llama-3.1-8b-instant", messages=[{"role": "system", "content": f"You are an expert financial analyst. Answer user questions naturally. Live data: {ctx_data}. Max 2 short sentences."}, {"role": "user", "content": user_input_text}])
+                completion = client.chat.completions.create(model="llama3-8b-8192", messages=[{"role": "system", "content": f"You are a premium financial analyst assistant. Answer questions naturally, beautifully, and creatively. Real-time market context values: {ctx_data}. Limit response to 2 short sentences."}, {"role": "user", "content": user_input_text}])
                 ai_reply = completion.choices[0].message.content
             except Exception as e:
                 ai_reply = f"Neural handshake lag: {e}"
