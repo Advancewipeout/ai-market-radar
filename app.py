@@ -17,7 +17,21 @@ st.markdown("""
     .news-box { background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; line-height: 1.5; }
     </style>
 """, unsafe_allow_html=True)
-
+# 1. PREMIUM HEADER & VISUAL CONFIGURATION
+st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
+st.markdown("""
+    <style>
+    .main { background-color:#0d0f14; color:#f8fafc; }
+    .brand-header-box { background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; border: 1px solid #312e81; box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15); margin-bottom: 25px; text-align: center; }
+    .brand-title { font-size: 38px !important; font-weight: 800 !important; letter-spacing: 2px; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; text-shadow: 0 0 40px rgba(99, 102, 241, 0.4); }
+    .brand-subtitle { color: #94a3b8; font-size: 16px; font-weight: 500; letter-spacing: 1px; margin: 0px 0px 8px 0px !important; }
+    .brand-timestamp { color: #00ffcc; font-size: 14px; font-weight: 600; letter-spacing: 1px; margin: 0 !important; font-family: monospace; }
+    .metric-box { background-color:#151922; padding:24px; border-radius:14px; margin-bottom:20px; border:1px solid #222b3c; }
+    .asset-header { font-size: 24px !important; font-weight: 700 !important; color: #ffffff; margin: 0 0 10px 0 !important; }
+    .ai-analysis { background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; line-height: 1.5; }
+    .news-box { background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; line-height: 1.5; }
+    </style>
+""", unsafe_allow_html=True)
 # 2. ISOLATED SMOOTH TIMESTAMP CONTAINER HOOK
 local_tz = pytz.timezone("America/Toronto")
 header_placeholder = st.empty()
