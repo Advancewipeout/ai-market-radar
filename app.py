@@ -76,25 +76,27 @@ with st.form(key="chat_secure_form", clear_on_submit=True):
 if submit_button and user_input_text:
     st.session_state.chat_history_matrix.append({"role": "user", "content": user_input_text})
     with st.chat_message("user"): st.write(user_input_text)
-    
     with st.chat_message("assistant"):
-        p_map = st.session_state.live_prices_cache
-        q = user_input_text.lower().strip()
-        ai_reply = "Welcome to the Advance Matrix node. Ask me about specific tickers, prices, or floor strategies!"
-        
-        if "bitcoin" in q or "btc" in q: ai_reply = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD', 0):,.2f} CAD**."
-        if "ethereum" in q or "eth" in q: ai_reply = f"The live price of Ethereum is currently **${p_map.get('ETH-CAD', 0):,.2f} CAD**."
-        if "solana" in q or "sol" in q: ai_reply = f"The live price of Solana is currently **${p_map.get('SOL-CAD', 0):,.2f} CAD**."
-        if "nvidia" in q or "nvda" in q: ai_reply = f"NVIDIA Corp (NVDA) is trading at **${p_map.get('NVDA', 0):,.2f} CAD**."
-        if "tesla" in q or "tsla" in q: ai_reply = f"Tesla Inc (TSLA) is trading at **${p_map.get('TSLA', 0):,.2f} CAD**."
-        if "stop loss" in q or "floor" in q: ai_reply = "A Stop-Loss is an automated protective floor price order that secures your investment capital."
-        if "hello" in q or "hey" in q or "hi" in q: ai_reply = "Hello! Welcome to the Advance Matrix system. Ask me about live indicators, stock prices, or strategies!"
+        with st.spinner("Analyzing question query parameters..."):
+            p_map = st.session_state.live_prices_cache
+            q = user_input_text.lower().strip()
+            ctx_data = f"Bitcoin: ${p_map.get('BTC-CAD',0):,.2f}, Ethereum: ${p_map.get('ETH-CAD',0):,.2f}, Solana: ${p_map.get('SOL-CAD',0):,.2f}, NVIDIA: ${p_map.get('NVDA',0):,.2f}, Tesla: ${p_map.get('TSLA',0):,.2f} CAD."
+            api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
+            if api_key_target == "WIPE":
+                ai_reply = f"Live feed status: {ctx_data} Setup your Groq Key to unleash unscripted deep learning conversations!"
+                if "bitcoin" in q or "btc" in q: ai_reply = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD',0):,.2f} CAD**."
+                if "ethereum" in q or "eth" in q: ai_reply = f"The live price of Ethereum is currently **${p_map.get('ETH-CAD',0):,.2f} CAD**."
+                if "stop loss" in q: ai_reply = "A Stop-Loss acts as an automated protective floor price order to secure investment capital."
+            else:
+                try:
+                    from groq import Groq
+                    client = Groq(api_key=api_key_target)
+                    completion = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role": "system", "content": f"You are an expert financial analyst. Answer user questions naturally. Live data: {ctx_data}. Max 2 short sentences."}, {"role": "user", "content": user_input_text}])
+                    ai_reply = completion.choices[0].message.content
+                except Exception as e: ai_reply = f"Neural handshake lag: {e}"
+            st.write(ai_reply)
+            st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
+            st.rerun()
 
-        st.write(ai_reply)
-        st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
-        st.rerun()
-
-st.markdown("---")
-st.caption("🤖 High-Velocity Production Node | Isolated Session Forms Enabled.")
 time.sleep(30)
 st.rerun()
