@@ -9,7 +9,14 @@ import pytz
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""
     <style>
-    .main { background-color: #0d0f14; color: #f8fafc; }
+    .main .main { 
+    background-image: url("https://unsplash.com/photos/a-clock-and-a-book-rnT6PRoNz18");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #f8fafc; 
+}
+
     .brand-header-box {
         background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
         padding: 30px;
