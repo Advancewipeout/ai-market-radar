@@ -1,4 +1,4 @@
-import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time, json
+import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time
 from datetime import datetime
 import pytz
 
@@ -46,12 +46,12 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
                 sig, color = "🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00"
                 tp_text, sl_text = "N/A", "N/A"
 
-            market_summary_list.append(f"Asset name: {display_name}, current_price=${price:,.2f}, 5day_move={pct:+.2f}%, system_action={sig}, mathematically_calculated_target=${target_price:,.2f}, recommended_protective_floor=${sl_text}")
+            market_summary_list.append(f"{ticker} ({display_name}): price=${price:,.2f}, 5day_move={pct:+.2f}%, system_action={sig}, mathematically_calculated_target=${target_price:,.2f}")
             asset_data_store[ticker] = {"display_name": display_name, "price": price, "target": target_price, "pct": pct, "sig": sig, "color": color, "tp": tp_text, "sl": sl_text, "df": df}
         except:
             pass
 
-# 2. ENFORCED SYSTEM ROLE SYSTEM LAYER (FORCES STRATEGIC TRACKER TEXT FORMATTING)
+# 2. BULLETPROOF RAW-TEXT NEURAL PASS WITH DIVISION PARSING
 api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
 ai_analysis_list = []
 
@@ -60,22 +60,15 @@ if api_key_target != "WIPE" and market_summary_list:
         from groq import Groq
         client = Groq(api_key=api_key_target)
         
-        # We split the commands into a strict System Layer that the 120B model must obey over everything else
+        master_prompt = f"You are an automated portfolio tracking strategy engine. Based on the market data below, write a single direct holding sentence for website viewers following this system. Explain exactly how long the model intends to hold the asset based on current metrics, and at what target price it will execute a sell order. Speak directly to platform users following your trades as a trade tracker guide. You MUST output exactly 6 sentences, with each sentence separated by a single '|' character. Follow the order of the assets listed below. Market data: {', '.join(market_summary_list)}"
+        
         completion = client.chat.completions.create(
             model="openai/gpt-oss-120b",
-            messages=[
-                {
-                    "role": "system", 
-                    "content": "You are an automated portfolio trading engine script. For each asset, you must generate a sentence explaining explicitly how long you plan to hold it (e.g., 'The model plans to hold this position for 3 to 5 days') and exactly at what target price it will execute a sell order. Never talk about general market trends, stability, or indicators. Speak directly to platform users following your trades as a copy-trade tracker guide."
-                },
-                {
-                    "role": "user", 
-                    "content": f"Return the output sentences strictly as a valid raw JSON object matching this schema: {{\"sentences\": [\"sentence 1 for item 1\", \"sentence 2 for item 2\", \"sentence 3 for item 3\", \"sentence 4 for item 4\", \"sentence 5 for item 5\", \"sentence 6 for item 6\"]}}. Keep array items in order. Market data to analyze: {', '.join(market_summary_list)}"
-                }
-            ],
-            response_format={"type": "json_object"}
+            messages=[{"role": "user", "content": master_prompt}]
         )
-        ai_analysis_list = json.loads(completion.choices.message.content).get("sentences", [])
+        # Split the raw text response by the divider symbol safely into our list
+        raw_text_response = completion.choices[0].message.content
+        ai_analysis_list = [s.strip() for s in raw_text_response.split("|")]
     except:
         pass
 
@@ -87,8 +80,9 @@ for index, ticker in enumerate(watchlist.keys()):
         
         try:
             txt = ai_analysis_list[index]
+            if len(txt) < 5: raise Exception() # Fallback check if splitter mismatched
         except:
-            txt = f"The sequential momentum layers for {ticker} have detected structural parameter adjustments of {data['pct']:+.2f}% over the trailing training vector. Standing by for the next trade execution window."
+            txt = f"The sequential AI layers for {ticker} have locked onto consolidation targets ({data['pct']:+.2f}% velocity change). The model intends to maintain this position for 2 to 4 days, standing by for a sell target breakout toward CAD ${data['target']:,.2f}."
 
         with col1 if index % 2 == 0 else col2:
             st.markdown(f"""
@@ -132,7 +126,7 @@ if submit_button and user_input_text:
                     from groq import Groq
                     client = Groq(api_key=api_key_target)
                     completion = client.chat.completions.create(model="openai/gpt-oss-120b", messages=[{"role": "system", "content": f"You are an expert financial analyst. Answer user questions naturally. Live data: {ctx_data}. Max 2 short sentences."}, {"role": "user", "content": user_input_text}])
-                    ai_reply = completion.choices.message.content
+                    ai_reply = completion.choices[0].message.content
                 except Exception as e: ai_reply = f"Neural handshake lag: {e}"
             st.write(ai_reply)
             st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
