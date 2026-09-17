@@ -201,23 +201,19 @@ if submit_button and user_input_text:
             - Tesla Inc (TSLA): ${p_map.get('TSLA', 0):,.2f} CAD
             """
             
-            try:
-                from groq import Groq
-                api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
-                if api_key_target == "WIPE":
-                    import ollama
-                    response = ollama.chat(model='llama3:8b', messages=[
-                        {'role': 'user', 'content': f"Context data: {market_context_data} Question: {user_input_text}. Answer in max 2 short sentences."}
-                    ])
-                    ai_reply = response['message']['content']
-                else:
-                    client = Groq(api_key=api_key_target)
-                    completion = client.chat.completions.create(
-                        model="llama-3.1-8b-instant",
-                        messages=[
-                            {"role": "system", "content": f"You are an expert financial analyst assistant. Answer user questions naturally. Use this real-time market data to give exact prices if the user asks: {market_context_data}. Limit your reply to a short maximum of 2 sentences."},
-                            {"role": "user", "content": user_input_text}
-                        ]
-                    )
-                    ai_reply = completion.choices.message.content
-            except Exception as e:
+            # SECURE CLOUD GATEWAY: Completely removed the broken try/except loops
+            api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
+            
+            if api_key_target == "WIPE":
+                # Clean, un-nested text-matching algorithm
+                q = user_input_text.lower()
+                if "price" in q or "value" in q or "much" in q:
+                    if "bitcoin" in q or "btc" in q:
+                        ai_reply = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD', 0):,.2f} CAD** based on our active data feed updates."
+                    elif "ethereum" in q or "eth" in q:
+                        ai_reply = f"The live price of Ethereum is currently **${p_map.get('ETH-CAD', 0):,.2f} CAD** synced in real-time."
+                    elif "nvidia" in q or "nvda" in q:
+                        ai_reply = f"NVIDIA Corp (NVDA) is trading at a currency-converted value of **${p_map.get('NVDA', 0):,.2f} CAD**."
+                    elif "tesla" in q or "tsla" in q:
+                        ai_reply = f"Tesla Inc (TSLA) is trading at a currency-converted value of **${p_map.get('TSLA', 0):,.2f} CAD**."
+                    else:
