@@ -1,4 +1,4 @@
-import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time
+import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time, json
 from datetime import datetime
 import pytz
 
@@ -13,15 +13,18 @@ watchlist = {"BTC-CAD": "🪙 BTC-CAD (Bitcoin)", "ETH-CAD": "💎 ETH-CAD (Ethe
 if "live_prices_cache" not in st.session_state: st.session_state.live_prices_cache = {}
 if "chat_history_matrix" not in st.session_state: st.session_state.chat_history_matrix = []
 
-col1, col2 = st.columns(2)
 try:
     fx = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
     usd_to_cad = 1.0 / float(fx["Close"].to_numpy().flatten()[-1])
 except:
     usd_to_cad = 1.36
 
+market_summary_list = []
+asset_data_store = {}
+
+# Gather market vectors upfront to bundle into one single neural query pass
 with st.spinner("📥 Synchronizing core market pricing vectors..."):
-    for index, (ticker, display_name) in enumerate(watchlist.items()):
+    for ticker, display_name in watchlist.items():
         try:
             df = yf.download(ticker, period="30d", interval="1d", progress=False, multi_level_index=False)
             df.columns = [str(c).strip().capitalize() for col in [df.columns] for c in col]
@@ -45,23 +48,54 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
                 sig, color = "🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00"
                 tp_text, sl_text = "N/A", "N/A"
 
-            txt = f"The sequential momentum layers for {ticker} have detected structural consolidation parameters ({pct:+.2f}% velocity change)."
+            market_summary_list.append(f"Asset name: {display_name}, current_price=${price:,.2f}, 5day_move={pct:+.2f}%")
+            asset_data_store[ticker] = {"display_name": display_name, "price": price, "target": target_price, "pct": pct, "sig": sig, "color": color, "tp": tp_text, "sl": sl_text, "df": df}
+        except:
+            pass
 
-            with col1 if index % 2 == 0 else col2:
-                st.markdown(f"""
-                <div class='metric-box' style='border-left-color:{color};'>
-                    <h2 class='asset-header'>{display_name}</h2>
-                    <hr style='border-color:#222b3c;'>
-                    <p style='font-size:16px;'><b>Current Market Price:</b> CAD ${price:,.2f}</p>
-                    <p style='font-size:16px;'><b>Neural Wave Target:</b> CAD ${target_price:,.2f} ({pct:+.2f}%)</p>
-                    <p style='font-size:18px;'><b>SYSTEM ACTION:</b> <span style='color:{color}; font-weight:bold;'>{sig}</span></p>
-                    <p style='font-size:14px; color:#cbd5e1;'>🎯 <b>Take-Profit Target:</b> {tp_text} | 🛑 <b>Stop-Loss Floor:</b> {sl_text}</p>
-                    <div class='ai-analysis'>🤖 <b>Neural AI Analyst:</b> {txt}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.line_chart(pd.DataFrame(df["Close"].tail(30)))
-        except Exception as e:
-            st.error(f"⚠️ Vector glitch on {ticker}: {e}")
+# 2. RUN ONE SINGLE BUNDLED CALL THROUGH YOUR CUSTOM 120B MODEL
+api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
+ai_analysis_list = []
+
+if api_key_target != "WIPE" and market_summary_list:
+    try:
+        from groq import Groq
+        client = Groq(api_key=api_key_target)
+        master_prompt = f"Act as an elite financial analyst. Write a unique, single professional analysis line for each of these 6 assets based on their performance numbers. Return the output strictly as a valid raw JSON object matching this schema: {{\"sentences\": [\"sentence 1 for item 1\", \"sentence 2 for item 2\", \"sentence 3 for item 3\", \"sentence 4 for item 4\", \"sentence 5 for item 5\", \"sentence 6 for item 6\"]}}. Keep the array items in the exact order requested. Market data: {', '.join(market_summary_list)}"
+        
+        completion = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[{"role": "user", "content": master_prompt}],
+            response_format={"type": "json_object"}
+        )
+        ai_analysis_list = json.loads(completion.choices[0].message.content).get("sentences", [])
+    except:
+        pass
+
+# Render grid columns and map individual array strings sequentially
+col1, col2 = st.columns(2)
+for index, ticker in enumerate(watchlist.keys()):
+    if ticker in asset_data_store:
+        data = asset_data_store[ticker]
+        
+        try:
+            txt = ai_analysis_list[index]
+        except:
+            txt = f"The sequential momentum layers for {ticker} have detected structural consolidation parameters ({data['pct']:+.2f}% velocity change)."
+
+        with col1 if index % 2 == 0 else col2:
+            st.markdown(f"""
+            <div class='metric-box' style='border-left-color:{data["color"]};'>
+                <h2 class='asset-header'>{data["display_name"]}</h2>
+                <hr style='border-color:#222b3c;'>
+                <p style='font-size:16px;'><b>Current Market Price:</b> CAD ${data["price"]:,.2f}</p>
+                <p style='font-size:16px;'><b>Neural Wave Target:</b> CAD ${data["target"]:,.2f} ({data["pct"]:+.2f}%)</p>
+                <p style='font-size:18px;'><b>SYSTEM ACTION:</b> <span style='color:{data["color"]}; font-weight:bold;'>{data["sig"]}</span></p>
+                <p style='font-size:14px; color:#cbd5e1;'>🎯 <b>Take-Profit Target:</b> {data["tp"]} | 🛑 <b>Stop-Loss Floor:</b> {data["sl"]}</p>
+                <div class='ai-analysis'>🤖 <b>Neural AI Analyst:</b> {txt}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.line_chart(pd.DataFrame(data["df"]["Close"].tail(30)))
 
 # 3. CONVERSATIONAL MATRICES ROOM
 st.markdown("---")
