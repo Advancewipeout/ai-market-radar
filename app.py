@@ -70,15 +70,6 @@ st.markdown("""
         color: #cbd5e1;
         line-height: 1.5;
     }
-    /* Fixed scroll height for chat history containment */
-    .chat-container {
-        max-height: 300px;
-        overflow-y: auto;
-        padding: 10px;
-        background-color: #11141c;
-        border-radius: 8px;
-        margin-bottom: 15px;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -174,26 +165,20 @@ st.markdown("---")
 st.header("💬 ADVANCE LEARNING CHAT INTERFACE")
 st.caption("Ask questions about market indicators, strategies, or crypto setups below.")
 
-# Initialize independent persistent memory matrix banks
 if "chat_history_matrix" not in st.session_state:
     st.session_state.chat_history_matrix = []
 
-# Display conversation log securely inside session frames
 for chat in st.session_state.chat_history_matrix:
     with st.chat_message(chat["role"]):
         st.write(chat["content"])
 
-# FORM MATRIX COUPLING: Hooks the text input field into an isolated state block 
-# to shield user typing text from the 30-second background stock refreshes!
 with st.form(key="chat_secure_form", clear_on_submit=True):
     user_input_text = st.text_input("Ask the Matrix AI a question (e.g., 'What is a stop loss?')...")
     submit_button = st.form_submit_button(label="⚡ Send to Matrix Brain")
 
 if submit_button and user_input_text:
-    # Commit user prompt immediately into state bank
     st.session_state.chat_history_matrix.append({"role": "user", "content": user_input_text})
     
-    # Force a direct layout redraw for instant user response mapping
     with st.chat_message("user"):
         st.write(user_input_text)
         
@@ -210,7 +195,19 @@ if submit_button and user_input_text:
                 if "stop loss" in q or "floor" in q:
                     ai_reply = "A Stop-Loss is an automated protective floor price order that automatically sells your asset if the price drops, guaranteeing your cash investment capital stays safe from massive market drops."
                 elif "buy" in q or "signal" in q:
-                    ai_reply = "The system triggers a green Strong Buy action signal when the 5-day multi-variable momentum velocity vectors break cleanly above our +0.50% volatility baseline with positive confirmation."
+                    ai_reply = "The system triggers a green Strong Buy action signal when the 5-day multi-variable momentum momentum vectors break cleanly above our +0.50% volatility baseline with positive confirmation."
                 elif "hold" in q:
                     ai_reply = "A Hold action signal indicates that the asset's price is currently moving inside a flat baseline consolidation channel. The system advises waiting until a volume-backed breakout happens."
                 else:
+                    ai_reply = "Welcome to the Advance Matrix node. For deep custom answers to that question, launch this script locally on your home desktop workstation to utilize the physical RTX 4060 Ti Llama 3 engine model!"
+            
+            st.write(ai_reply)
+            st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
+            st.rerun()
+
+st.markdown("---")
+st.caption("🤖 High-Velocity Production Node | Isolated Session Forms Enabled.")
+
+# 4. BACKGROUND REFRESH
+time.sleep(30)
+st.rerun()
