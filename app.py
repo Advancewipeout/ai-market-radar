@@ -37,25 +37,23 @@ class WebsiteCryptoLSTM(nn.Module):
 col1, col2 = st.columns(2)
 
 with st.spinner("🤖 Remote server processing multi-variable deep learning optimization matrices..."):
-    # AUTOMATED HARDWARE FALLBACK LAYER: Swaps to CPU smoothly if running on the cloud website
     device = torch.device("cpu")
     
-    # Fetch currency exchange metrics
+    # Fetch currency exchange metrics with multi-level indices explicitly deactivated
     try:
-        fx_data = yf.download("CADUSD=X", period="1d", progress=False)
-        fx_data.columns = fx_data.columns.get_level_values(0)
+        fx_data = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
         usd_to_cad = 1.0 / float(fx_data["Close"].to_numpy().flatten()[-1])
     except:
         usd_to_cad = 1.36
 
     for index, ticker in enumerate(watchlist):
         try:
-            # Siphon historical dataset layers
-            df = yf.download(ticker, start="2021-01-01", progress=False)
+            # MULTI_LEVEL_INDEX=FALSE PATCH: Prevents yfinance from generating multi-index layers
+            df = yf.download(ticker, start="2021-01-01", progress=False, multi_level_index=False)
             if df.empty or len(df) < 80:
                 continue
-            df.columns = df.columns.get_level_values(0)
 
+            # Flatten input vectors to remove any remaining dimension noise
             close_prices = df["Close"].to_numpy().flatten()
             volumes = df["Volume"].to_numpy().flatten()
 
