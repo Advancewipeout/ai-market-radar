@@ -22,7 +22,6 @@ except:
 market_summary_list = []
 asset_data_store = {}
 
-# Gather market vectors upfront to bundle into one single neural query pass
 with st.spinner("📥 Synchronizing core market pricing vectors..."):
     for ticker, display_name in watchlist.items():
         try:
@@ -33,7 +32,6 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
             if ticker in ["NVDA", "TSLA"]: price *= usd_to_cad
             st.session_state.live_prices_cache[ticker] = price
             
-            # Momentum Velocity Strategy Logic
             pct = ((price - float(close_arr[-5])) / float(close_arr[-5])) * 100
             target_price = price * (1.0 + (pct * 0.05 / 100))
             stop_long, stop_short = price * 0.975, price * 1.025
@@ -48,12 +46,12 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
                 sig, color = "🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00"
                 tp_text, sl_text = "N/A", "N/A"
 
-            market_summary_list.append(f"Asset name: {display_name}, current_price=${price:,.2f}, 5day_move={pct:+.2f}%")
+            market_summary_list.append(f"Asset name: {display_name}, current_price=${price:,.2f}, 5day_move={pct:+.2f}%, system_action={sig}, mathematically_calculated_target=${target_price:,.2f}, recommended_protective_floor=${sl_text}")
             asset_data_store[ticker] = {"display_name": display_name, "price": price, "target": target_price, "pct": pct, "sig": sig, "color": color, "tp": tp_text, "sl": sl_text, "df": df}
         except:
             pass
 
-# 2. RUN ONE SINGLE BUNDLED CALL THROUGH YOUR CUSTOM 120B MODEL
+# 2. ENFORCED SYSTEM ROLE SYSTEM LAYER (FORCES STRATEGIC TRACKER TEXT FORMATTING)
 api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
 ai_analysis_list = []
 
@@ -61,18 +59,27 @@ if api_key_target != "WIPE" and market_summary_list:
     try:
         from groq import Groq
         client = Groq(api_key=api_key_target)
-        master_prompt = f"Act as an elite financial analyst. Write a unique, single professional analysis line for each of these 6 assets based on their performance numbers. Return the output strictly as a valid raw JSON object matching this schema: {{\"sentences\": [\"sentence 1 for item 1\", \"sentence 2 for item 2\", \"sentence 3 for item 3\", \"sentence 4 for item 4\", \"sentence 5 for item 5\", \"sentence 6 for item 6\"]}}. Keep the array items in the exact order requested. Market data: {', '.join(market_summary_list)}"
         
+        # We split the commands into a strict System Layer that the 120B model must obey over everything else
         completion = client.chat.completions.create(
             model="openai/gpt-oss-120b",
-            messages=[{"role": "user", "content": master_prompt}],
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "You are an automated portfolio trading engine script. For each asset, you must generate a sentence explaining explicitly how long you plan to hold it (e.g., 'The model plans to hold this position for 3 to 5 days') and exactly at what target price it will execute a sell order. Never talk about general market trends, stability, or indicators. Speak directly to platform users following your trades as a copy-trade tracker guide."
+                },
+                {
+                    "role": "user", 
+                    "content": f"Return the output sentences strictly as a valid raw JSON object matching this schema: {{\"sentences\": [\"sentence 1 for item 1\", \"sentence 2 for item 2\", \"sentence 3 for item 3\", \"sentence 4 for item 4\", \"sentence 5 for item 5\", \"sentence 6 for item 6\"]}}. Keep array items in order. Market data to analyze: {', '.join(market_summary_list)}"
+                }
+            ],
             response_format={"type": "json_object"}
         )
-        ai_analysis_list = json.loads(completion.choices[0].message.content).get("sentences", [])
+        ai_analysis_list = json.loads(completion.choices.message.content).get("sentences", [])
     except:
         pass
 
-# Render grid columns and map individual array strings sequentially
+# Render grid layout columns cleanly
 col1, col2 = st.columns(2)
 for index, ticker in enumerate(watchlist.keys()):
     if ticker in asset_data_store:
@@ -81,7 +88,7 @@ for index, ticker in enumerate(watchlist.keys()):
         try:
             txt = ai_analysis_list[index]
         except:
-            txt = f"The sequential momentum layers for {ticker} have detected structural consolidation parameters ({data['pct']:+.2f}% velocity change)."
+            txt = f"The sequential momentum layers for {ticker} have detected structural parameter adjustments of {data['pct']:+.2f}% over the trailing training vector. Standing by for the next trade execution window."
 
         with col1 if index % 2 == 0 else col2:
             st.markdown(f"""
@@ -115,7 +122,6 @@ if submit_button and user_input_text:
             p_map = st.session_state.live_prices_cache
             q = user_input_text.lower().strip()
             ctx_data = f"Bitcoin: ${p_map.get('BTC-CAD',0):,.2f}, Ethereum: ${p_map.get('ETH-CAD',0):,.2f}, Solana: ${p_map.get('SOL-CAD',0):,.2f}, NVIDIA: ${p_map.get('NVDA',0):,.2f}, Tesla: ${p_map.get('TSLA',0):,.2f} CAD."
-            api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
             if api_key_target == "WIPE":
                 ai_reply = f"Live feed status: {ctx_data} Setup your Groq Key to unleash unscripted deep learning conversations!"
                 if "bitcoin" in q or "btc" in q: ai_reply = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD',0):,.2f} CAD**."
@@ -126,7 +132,7 @@ if submit_button and user_input_text:
                     from groq import Groq
                     client = Groq(api_key=api_key_target)
                     completion = client.chat.completions.create(model="openai/gpt-oss-120b", messages=[{"role": "system", "content": f"You are an expert financial analyst. Answer user questions naturally. Live data: {ctx_data}. Max 2 short sentences."}, {"role": "user", "content": user_input_text}])
-                    ai_reply = completion.choices[0].message.content
+                    ai_reply = completion.choices.message.content
                 except Exception as e: ai_reply = f"Neural handshake lag: {e}"
             st.write(ai_reply)
             st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
