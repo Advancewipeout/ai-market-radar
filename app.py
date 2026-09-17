@@ -17,36 +17,57 @@ st.title("📊 AI MULTIVARIATE DEEP LEARNING RADAR")
 st.subheader("Live Multi-Asset Ultra-Fast Tracking Dashboard")
 st.markdown("---")
 
-watchlist = ["BTC-CAD", "ETH-CAD", "SOL-CAD", "ARE.TO", "NVDA", "TSLA"]
+# 2. CHOOSE YOUR COINS & ASSIGN THEM CUSTOM GLOWING ICONS
+watchlist_config = {
+    "BTC-CAD": {"name": "🪙 ⚡ BITCOIN", "type": "Crypto"},
+    "ETH-CAD": {"name": "💎 🟣 ETHEREUM", "type": "Crypto"},
+    "SOL-CAD": {"name": "☀️ 🟢 SOLANA", "type": "Crypto"},
+    "ARE.TO": {"name": "🏗️ 🇨🇦 AECON GROUP", "type": "Stock"},
+    "NVDA": {"name": "🎮 🟢 NVIDIA CORP", "type": "Stock"},
+    "TSLA": {"name": "⚡ 🔴 TESLA INC", "type": "Stock"}
+}
 
-# Create 2 visual columns on the webpage layout
-col1, col2 = st.columns(2)
+# 3. SIDEBAR CATEGORY FILTERING SYSTEM
+st.sidebar.title("🛠️ MATRIX SELECTION CONTROLS")
+asset_filter = st.sidebar.selectbox("Filter App View Mode:", ["Show All Assets", "Crypto Assets Only", "Stocks Only"])
 
-# AUTOMATED DATA CACHE PROTECTION LAYER (Expires every 600 seconds / 10 minutes)
+# 4. SECURE DATA CACHE (Prevents throttling by locking data in memory for 10 minutes)
 @st.cache_data(ttl=600)
-def fetch_secure_market_data(ticker):
+def fetch_cached_market_data(ticker):
     df_download = yf.download(ticker, start="2021-01-01", progress=False, multi_level_index=False)
-    if df_download.empty:
+    if df_download.empty or len(df_download) < 5:
         return None
-    return df_download.to_json() # Convert to a stable text string format for secure cloud memory storage
+    # Reset index to safely preserve dates before serialization
+    df_download = df_download.reset_index()
+    return df_download.to_dict(orient="list")
 
 with st.spinner("⚡ Pulling real-time protected market matrices..."):
-    # Fetch currency exchange metrics
+    # Fetch currency exchange metrics securely
     try:
         fx_raw = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
         usd_to_cad = 1.0 / float(fx_raw["Close"].to_numpy().flatten()[-1])
     except:
         usd_to_cad = 1.36
 
-    for index, ticker in enumerate(watchlist):
-        try:
-            # Call the protected data cache layer smoothly
-            json_data = fetch_secure_market_data(ticker)
-            if json_data is None:
-                continue
-            df = pd.read_json(json_data)
+    # Create 2 visual columns on the webpage layout
+    col1, col2 = st.columns(2)
+    display_index = 0
 
-            current_actual_price = float(df["Close"].to_numpy().flatten()[-1])
+    for ticker, info in watchlist_config.items():
+        # Apply the filter logic
+        if asset_filter == "Crypto Assets Only" and info["type"] != "Crypto":
+            continue
+        if asset_filter == "Stocks Only" and info["type"] != "Stock":
+            continue
+
+        try:
+            # Reconstruct the cached data back into a clean spreadsheet dataframe
+            cached_dict = fetch_cached_market_data(ticker)
+            if cached_dict is None:
+                continue
+            df = pd.DataFrame(cached_dict)
+
+            current_actual_price = float(df["Close"].iloc[-1])
             
             # High-Velocity Vector Momentum Engine
             recent_prices = df["Close"].tail(10).to_numpy().flatten()
@@ -55,7 +76,7 @@ with st.spinner("⚡ Pulling real-time protected market matrices..."):
 
             # Currency adjustments for US tech assets
             is_us_stock = ticker in ["NVDA", "TSLA"]
-            display_ticker = f"{ticker} (USD converted to CAD)" if is_us_stock else ticker
+            final_display_name = f"{info['name']} (USD to CAD)" if is_us_stock else info["name"]
             
             if is_us_stock:
                 current_actual_price *= usd_to_cad
@@ -81,13 +102,14 @@ with st.spinner("⚡ Pulling real-time protected market matrices..."):
                 target_text = "N/A"
                 floor_text = "N/A"
 
-            # Allocate tracking dashboard column
-            target_col = col1 if index % 2 == 0 else col2
+            # Allocate tracking dashboard column dynamically
+            target_col = col1 if display_index % 2 == 0 else col2
+            display_index += 1
             
             with target_col:
                 st.markdown(f"""
                 <div class="metric-box" style="border-left-color: {border_color};">
-                    <h2 style="margin: 0; display: inline-block;">🪙 {display_ticker}</h2>
+                    <h2 style="margin: 0; display: inline-block;">{final_display_name}</h2>
                     <hr style="margin: 10px 0; border-color: #334155;">
                     <p style="font-size: 16px; margin: 4px 0;"><b>Current Market Price:</b> CAD ${current_actual_price:,.2f}</p>
                     <p style="font-size: 16px; margin: 4px 0;"><b>Neural Wave Target:</b> CAD ${tomorrow_predicted_price:,.2f} ({price_change_pct:+.2f}%)</p>
@@ -96,8 +118,9 @@ with st.spinner("⚡ Pulling real-time protected market matrices..."):
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Mapped Interactive Trend Charts
-                chart_data = pd.DataFrame(df["Close"].tail(30))
+                # Render interactive historical pricing charts smoothly
+                chart_data = pd.DataFrame(df["Close"].tail(30)).copy()
+                chart_data.index = df["Date"].tail(30)
                 if is_us_stock:
                     chart_data["Close"] *= usd_to_cad
                 st.line_chart(chart_data)
@@ -106,4 +129,4 @@ with st.spinner("⚡ Pulling real-time protected market matrices..."):
             st.error(f"⚠️ Vector loop collision on {ticker}: {e}")
 
 st.markdown("---")
-st.caption("🤖 High-Velocity Trend Verification Pipeline actively backed by network memory data cache protections.")
+st.sidebar.caption("🤖 High-Velocity Production Node backed by safe memory caching protection layers.")
