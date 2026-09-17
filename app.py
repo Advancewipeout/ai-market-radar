@@ -76,7 +76,6 @@ with st.form(key="chat_secure_form", clear_on_submit=True):
     user_input_text = st.text_input("Ask the Matrix AI a question...")
     submit_button = st.form_submit_button(label="⚡ Send to Matrix Brain")
 
-api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
 if submit_button and user_input_text:
     st.session_state.chat_history_matrix.append({"role": "user", "content": user_input_text})
     with st.chat_message("user"): st.write(user_input_text)
@@ -85,12 +84,20 @@ if submit_button and user_input_text:
         q = user_input_text.lower().strip()
         ctx_data = f"Bitcoin: ${p_map.get('BTC-CAD',0):,.2f}, Ethereum: ${p_map.get('ETH-CAD',0):,.2f}, Solana: ${p_map.get('SOL-CAD',0):,.2f}, NVIDIA: ${p_map.get('NVDA',0):,.2f}, Tesla: ${p_map.get('TSLA',0):,.2f} CAD."
         
-        # 🎯 COMPLETELY FLAT AI RESPONSE LOGIC (ZERO INDENTATION TRY BLOCKS LEFT)
-        ai_reply = f"Live feed status: {ctx_data} Matrix terminal unscripted node active."
-        if "bitcoin" in q or "btc" in q: ai_reply = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD',0):,.2f} CAD** based on our active data feed updates."
-        if "ethereum" in q or "eth" in q: ai_reply = f"The live price of Ethereum is currently **${p_map.get('ETH-CAD',0):,.2f} CAD** synced in real-time."
-        if "stop loss" in q: ai_reply = "A Stop-Loss acts as an automated protective floor price order to secure investment capital."
+        # Pull key locally right before routing pass to clear undefined Pylance errors
+        api_key_target_local = st.secrets.get("GROQ_API_KEY", "WIPE")
         
+        if api_key_target_local == "WIPE":
+            ai_reply = f"Live feed status: {ctx_data} Setup your Groq Key inside your secrets box to unleash unscripted deep learning conversations!"
+        else:
+            try:
+                url = "https://openai.com"
+                req = urllib.request.Request(url, data=json.dumps({"model": "openai/gpt-oss-120b", "messages": [{"role": "system", "content": f"You are an expert unscripted financial analyst brain. Have intelligent conversations. Live context figures: {ctx_data}"}, {"role": "user", "content": user_input_text}]}).encode("utf-8"), headers={"Authorization": f"Bearer {api_key_target_local}", "Content-Type": "application/json"}, method="POST")
+                with urllib.request.urlopen(req) as response:
+                    ai_reply = json.loads(response.read().decode("utf-8"))["choices"][0]["message"]["content"]
+            except Exception as e:
+                ai_reply = f"Neural handshake lag: {e}"
+            
         st.write(ai_reply)
         st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
         st.rerun()
@@ -98,7 +105,14 @@ if submit_button and user_input_text:
 st.markdown("---")
 st.caption("🤖 High-Velocity Production Node | Isolated Session Forms Enabled.")
 
+# 🔥 YOUR UNTOUCHED BACKGROUND CLOCK ENGINE (KEEPING YOUR TIME MOVING FLUIDLY!)
 while True:
     clock = datetime.now(local_tz).strftime("%Y-%m-%d %I:%M:%S %p")
-    banner_placeholder.markdown(f"<div class='brand-header-box'><h1 class='brand-title'>🌐 SMITTY'S AI MATRIX SYSTEM</h1><p class='brand-subtitle'>Automated Multi-Asset Deep Sequential Momentum Radar</p><p style='color: #00ffcc; font-family: monospace; font-size: 14px; font-weight: 600; margin: 0; letter-spacing: 1px;'>⚡ SYSTEM STATUS: ACTIVE | MATRIX LIVE SYNC TIME: {clock}</p></div>", unsafe_allow_html=True)
+    banner_placeholder.markdown(f"""
+        <div class='brand-header-box'>
+            <h1 class='brand-title'>🌐 SMITTY'S AI MATRIX SYSTEM</h1>
+            <p class='brand-subtitle'>Automated Multi-Asset Deep Sequential Momentum Radar</p>
+            <p style='color: #00ffcc; font-family: monospace; font-size: 14px; font-weight: 600; margin: 0; letter-spacing: 1px;'>⚡ SYSTEM STATUS: ACTIVE | MATRIX LIVE SYNC TIME: {clock}</p>
+        </div>
+    """, unsafe_allow_html=True)
     time.sleep(1)
