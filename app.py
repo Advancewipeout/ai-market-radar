@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import yfinance as yf
 
 # 1. PREMIUM PAGE CONFIGURATION
@@ -17,116 +16,77 @@ st.title("📊 AI MULTIVARIATE DEEP LEARNING RADAR")
 st.subheader("Live Multi-Asset Ultra-Fast Tracking Dashboard")
 st.markdown("---")
 
-# 2. CHOOSE YOUR COINS & ASSIGN THEM CUSTOM GLOWING ICONS
-watchlist_config = {
-    "BTC-CAD": {"name": "🪙 ⚡ BITCOIN", "type": "Crypto"},
-    "ETH-CAD": {"name": "💎 🟣 ETHEREUM", "type": "Crypto"},
-    "SOL-CAD": {"name": "☀️ 🟢 SOLANA", "type": "Crypto"},
-    "ARE.TO": {"name": "🏗️ 🇨🇦 AECON GROUP", "type": "Stock"},
-    "NVDA": {"name": "🎮 🟢 NVIDIA CORP", "type": "Stock"},
-    "TSLA": {"name": "⚡ 🔴 TESLA INC", "type": "Stock"}
-}
+watchlist = ["BTC-CAD", "ETH-CAD", "SOL-CAD", "ARE.TO", "NVDA", "TSLA"]
 
-# 3. SIDEBAR CATEGORY FILTERING SYSTEM
-st.sidebar.title("🛠️ MATRIX SELECTION CONTROLS")
-asset_filter = st.sidebar.selectbox("Filter App View Mode:", ["Show All Assets", "Crypto Assets Only", "Stocks Only"])
+# Create 2 visual columns on the webpage layout
+col1, col2 = st.columns(2)
 
-# 4. SECURE DATA CACHE (Prevents throttling by locking data in memory for 10 minutes)
-@st.cache_data(ttl=600)
-def fetch_cached_market_data(ticker):
-    df_download = yf.download(ticker, start="2021-01-01", progress=False, multi_level_index=False)
-    if df_download.empty or len(df_download) < 5:
-        return None
-    # Reset index to safely preserve dates before serialization
-    df_download = df_download.reset_index()
-    return df_download.to_dict(orient="list")
-
-with st.spinner("⚡ Pulling real-time protected market matrices..."):
+with st.spinner("⚡ Pulling real-time market matrices..."):
     # Fetch currency exchange metrics securely
     try:
-        fx_raw = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
-        usd_to_cad = 1.0 / float(fx_raw["Close"].to_numpy().flatten()[-1])
+        fx_data = yf.download("CADUSD=X", period="1d", progress=False)
+        usd_to_cad = 1.0 / float(fx_data["Close"].iloc[-1])
     except:
         usd_to_cad = 1.36
 
-    # Create 2 visual columns on the webpage layout
-    col1, col2 = st.columns(2)
-    display_index = 0
-
-    for ticker, info in watchlist_config.items():
-        # Apply the filter logic
-        if asset_filter == "Crypto Assets Only" and info["type"] != "Crypto":
-            continue
-        if asset_filter == "Stocks Only" and info["type"] != "Stock":
-            continue
-
+    for index, ticker in enumerate(watchlist):
         try:
-            # Reconstruct the cached data back into a clean spreadsheet dataframe
-            cached_dict = fetch_cached_market_data(ticker)
-            if cached_dict is None:
-                continue
-            df = pd.DataFrame(cached_dict)
-
-            current_actual_price = float(df["Close"].iloc[-1])
+            # Clean single-line download protocol
+            df = yf.download(ticker, period="30d", interval="1d", progress=False)
             
-            # High-Velocity Vector Momentum Engine
-            recent_prices = df["Close"].tail(10).to_numpy().flatten()
-            momentum_velocity = (recent_prices[-1] - recent_prices) / recent_prices
-            tomorrow_predicted_price = current_actual_price * (1.0 + (momentum_velocity * 0.25))
+            # Extract data rows safely without table conflicts
+            close_array = df["Close"].to_numpy().flatten()
+            current_actual_price = float(close_array[-1])
+            
+            # Simple momentum calculation that requires zero cloud processing power
+            past_price = float(close_array[-5])
+            price_change_pct = ((current_actual_price - past_price) / past_price) * 100
 
-            # Currency adjustments for US tech assets
+            # Currency adjustments for US markets
             is_us_stock = ticker in ["NVDA", "TSLA"]
-            final_display_name = f"{info['name']} (USD to CAD)" if is_us_stock else info["name"]
+            display_ticker = f"🪙 {ticker} (USD converted to CAD)" if is_us_stock else f"🪙 {ticker}"
             
             if is_us_stock:
                 current_actual_price *= usd_to_cad
-                tomorrow_predicted_price *= usd_to_cad
 
-            price_change_pct = ((tomorrow_predicted_price - current_actual_price) / current_actual_price) * 100
+            # Execution target mathematics filters
             stop_loss_long = current_actual_price * 0.975
-            stop_loss_short = current_actual_price * 1.025
 
-            if price_change_pct > 0.25:
+            if price_change_pct > 0.5:
                 action_signal = "🟢 STRONG BUY / ENTER LONG"
                 border_color = "#00ffcc"
-                target_text = f"CAD ${tomorrow_predicted_price:,.2f} (Take Profit Limit)"
-                floor_text = f"CAD ${stop_loss_long:,.2f} (Stop Loss Floor)"
-            elif price_change_pct < -0.25:
+                floor_text = f"CAD ${stop_loss_long:,.2f}"
+            elif price_change_pct < -0.5:
                 action_signal = "🔴 STRONG SELL / ENTER SHORT"
                 border_color = "#ff4b4b"
-                target_text = f"CAD ${tomorrow_predicted_price:,.2f} (Short Cover Target)"
-                floor_text = f"CAD ${stop_loss_short:,.2f} (Short Stop Ceiling)"
+                floor_text = f"CAD ${stop_loss_long:,.2f}"
             else:
                 action_signal = "🟡 HOLD / WAIT FOR CONFIRMATION"
                 border_color = "#ffcc00"
-                target_text = "N/A"
                 floor_text = "N/A"
 
-            # Allocate tracking dashboard column dynamically
-            target_col = col1 if display_index % 2 == 0 else col2
-            display_index += 1
+            # Allocate targeting column
+            target_col = col1 if index % 2 == 0 else col2
             
             with target_col:
                 st.markdown(f"""
                 <div class="metric-box" style="border-left-color: {border_color};">
-                    <h2 style="margin: 0; display: inline-block;">{final_display_name}</h2>
+                    <h2 style="margin: 0; display: inline-block;">{display_ticker}</h2>
                     <hr style="margin: 10px 0; border-color: #334155;">
                     <p style="font-size: 16px; margin: 4px 0;"><b>Current Market Price:</b> CAD ${current_actual_price:,.2f}</p>
-                    <p style="font-size: 16px; margin: 4px 0;"><b>Neural Wave Target:</b> CAD ${tomorrow_predicted_price:,.2f} ({price_change_pct:+.2f}%)</p>
                     <p style="font-size: 18px; margin: 8px 0;"><b>SYSTEM ACTION:</b> <span style="color: {border_color}; font-weight: bold;">{action_signal}</span></p>
-                    <p style="font-size: 14px; margin: 4px 0; color: #cbd5e1;">🎯 <b>Take-Profit Order:</b> {target_text} | 🛑 <b>Stop-Loss Floor:</b> {floor_text}</p>
+                    <p style="font-size: 14px; margin: 4px 0; color: #cbd5e1;">🛑 <b>Stop-Loss Protective Floor:</b> {floor_text}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Render interactive historical pricing charts smoothly
-                chart_data = pd.DataFrame(df["Close"].tail(30)).copy()
-                chart_data.index = df["Date"].tail(30)
+                # Plot the clean historical trend chart
+                chart_df = pd.DataFrame(df["Close"].tail(30))
                 if is_us_stock:
-                    chart_data["Close"] *= usd_to_cad
-                st.line_chart(chart_data)
+                    chart_df["Close"] *= usd_to_cad
+                st.line_chart(chart_df)
 
         except Exception as e:
-            st.error(f"⚠️ Vector loop collision on {ticker}: {e}")
+            st.error(f"⚠️ Vector alignment glitch on {ticker}: {e}")
 
 st.markdown("---")
-st.sidebar.caption("🤖 High-Velocity Production Node backed by safe memory caching protection layers.")
+st.caption("🤖 High-Velocity Trend Verification Pipeline actively optimized for remote cloud deployment frameworks.")
