@@ -2,15 +2,13 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import time
+from datetime import datetime
 
 # 1. INSTITUTIONAL BRANDING CORE STYLING LAYER
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""
     <style>
-    /* Global Base Configuration */
     .main { background-color: #0d0f14; color: #f8fafc; }
-    
-    /* Neon Branding Top Header Layout */
     .brand-header-box {
         background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
         padding: 30px;
@@ -36,10 +34,16 @@ st.markdown("""
         font-size: 16px;
         font-weight: 500;
         letter-spacing: 1px;
-        margin: 0 !important;
+        margin: 0px 0px 8px 0px !important;
     }
-    
-    /* Premium Metric Panel Container Blocks */
+    .brand-timestamp {
+        color: #00ffcc;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        margin: 0 !important;
+        font-family: monospace;
+    }
     .metric-box {
         background-color: #151922;
         padding: 24px;
@@ -47,34 +51,31 @@ st.markdown("""
         border-left: 6px solid #6366f1;
         margin-bottom: 20px;
         box-shadow: 0 4px 20px 0 rgba(0,0,0,0.4);
-        border-top: 1px solid #222b3c;
-        border-right: 1px solid #222b3c;
-        border-bottom: 1px solid #222b3c;
+        border: 1px solid #222b3c;
         transition: transform 0.2s ease;
     }
-    .metric-box:hover {
-        transform: translateY(-2px);
-    }
+    .metric-box:hover { transform: translateY(-2px); }
     .asset-header {
         font-size: 24px !important;
         font-weight: 700 !important;
         color: #ffffff;
         margin: 0 0 10px 0 !important;
-        display: flex;
-        align-items: center;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 2. RENDER THE BRAND NEW PREMIUM CUSTOM BANNER
-st.markdown("""
+# GENERATE REAL-TIME TIME STAMP
+current_clock_time = datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
+
+# 2. RENDER THE BRAND NEW PREMIUM CUSTOM BANNER WITH CLOCK
+st.markdown(f"""
     <div class="brand-header-box">
         <h1 class="brand-title">🌐 ADVANCE AI MATRIX SYSTEM</h1>
         <p class="brand-subtitle">Automated Multi-Asset Deep Sequential Momentum Radar</p>
+        <p class="brand-timestamp">⚡ SYSTEM STATUS: ACTIVE | MATRIX SYNC TIME: {current_clock_time}</p>
     </div>
 """, unsafe_allow_html=True)
 
-# Watchlist configuration with embedded interface icons
 watchlist = {
     "BTC-CAD": "🪙 BTC-CAD (Bitcoin)",
     "ETH-CAD": "💎 ETH-CAD (Ethereum)",
@@ -84,11 +85,9 @@ watchlist = {
     "TSLA": "⚡ TSLA (Tesla Inc)"
 }
 
-# Create 2 visual columns on the webpage layout
 col1, col2 = st.columns(2)
 
 with st.spinner("📥 Synchronizing core market pricing vectors..."):
-    # Fetch currency exchange metrics securely
     try:
         fx_data = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
         usd_to_cad = 1.0 / float(fx_data["Close"].to_numpy().flatten()[-1])
@@ -97,25 +96,21 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
 
     for index, (ticker, display_name) in enumerate(watchlist.items()):
         try:
-            # Siphon asset dataset arrays and clean column structural indices
             df = yf.download(ticker, period="30d", interval="1d", progress=False, multi_level_index=False)
             df.columns = [str(col).strip().capitalize() for col in df.columns]
             
             close_array = df["Close"].to_numpy().flatten()
             current_actual_price = float(close_array[-1])
             
-            # Simple momentum calculation that requires zero cloud processing power
             past_price = float(close_array[-5])
             price_change_pct = ((current_actual_price - past_price) / past_price) * 100
 
-            # Currency adjustments for US markets
             is_us_stock = ticker in ["NVDA", "TSLA"]
             final_title = f"{display_name} [CAD CONVERTED]" if is_us_stock else display_name
             
             if is_us_stock:
                 current_actual_price *= usd_to_cad
 
-            # Execution target mathematics filters
             stop_loss_long = current_actual_price * 0.975
 
             if price_change_pct > 0.5:
@@ -131,7 +126,6 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
                 border_color = "#ffcc00"
                 floor_text = "N/A"
 
-            # Allocate targeting column dynamically
             target_col = col1 if index % 2 == 0 else col2
             
             with target_col:
@@ -145,7 +139,6 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # CHART LAYER CORRECTION PATCH: Forces strict clean 1D formatting for charts
                 chart_df = pd.DataFrame(df["Close"].tail(30))
                 chart_df.columns = ["Close"]
                 if is_us_stock:
