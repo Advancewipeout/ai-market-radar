@@ -94,6 +94,9 @@ watchlist = {
     "TSLA": "⚡ TSLA (Tesla Inc)"
 }
 
+if "live_prices_cache" not in st.session_state:
+    st.session_state.live_prices_cache = {}
+
 col1, col2 = st.columns(2)
 
 with st.spinner("📥 Synchronizing core market pricing vectors..."):
@@ -118,6 +121,8 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
             
             if is_us_stock:
                 current_actual_price *= usd_to_cad
+
+            st.session_state.live_prices_cache[ticker] = current_actual_price
 
             stop_loss_long = current_actual_price * 0.975
 
@@ -160,7 +165,7 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
         except Exception as e:
             st.error(f"⚠️ Vector alignment glitch on {ticker}: {e}")
 
-# 3. ADVANCED LEARNING CHATBOX (WITH EXPLICIT MEMORY LOCK CHANNELS)
+# 3. ADVANCED LEARNING CHATBOX (WITH LIVE PRICE RECOGNITION DATA FEED)
 st.markdown("---")
 st.header("💬 ADVANCE LEARNING CHAT INTERFACE")
 st.caption("Ask questions about market indicators, strategies, or crypto setups below.")
@@ -184,30 +189,33 @@ if submit_button and user_input_text:
         
     with st.chat_message("assistant"):
         with st.spinner("Analyzing question query parameters..."):
-            try:
-                import ollama
-                response = ollama.chat(model='llama3:8b', messages=[
-                    {'role': 'user', 'content': f"You are an expert financial analyst chatbot. Give a short 2-sentence answer to this user question: {user_input_text}"}
-                ])
-                ai_reply = response['message']['content']
-            except Exception:
-                q = user_input_text.lower()
-                if "stop loss" in q or "floor" in q:
-                    ai_reply = "A Stop-Loss is an automated protective floor price order that automatically sells your asset if the price drops, guaranteeing your cash investment capital stays safe from massive market drops."
-                elif "buy" in q or "signal" in q:
-                    ai_reply = "The system triggers a green Strong Buy action signal when the 5-day multi-variable momentum momentum vectors break cleanly above our +0.50% volatility baseline with positive confirmation."
-                elif "hold" in q:
-                    ai_reply = "A Hold action signal indicates that the asset's price is currently moving inside a flat baseline consolidation channel. The system advises waiting until a volume-backed breakout happens."
-                else:
-                    ai_reply = "Welcome to the Advance Matrix node. For deep custom answers to that question, launch this script locally on your home desktop workstation to utilize the physical RTX 4060 Ti Llama 3 engine model!"
+            # Clean data array strings mapping live dashboard numbers right into the AI context layers
+            p_map = st.session_state.get("live_prices_cache", {})
+            market_context_data = f"""
+            System Matrix Live Context:
+            - Bitcoin (BTC-CAD): ${p_map.get('BTC-CAD', 0):,.2f} CAD
+            - Ethereum (ETH-CAD): ${p_map.get('ETH-CAD', 0):,.2f} CAD
+            - Solana (SOL-CAD): ${p_map.get('SOL-CAD', 0):,.2f} CAD
+            - Aecon Group (ARE.TO): ${p_map.get('ARE.TO', 0):,.2f} CAD
+            - NVIDIA Corp (NVDA): ${p_map.get('NVDA', 0):,.2f} CAD
+            - Tesla Inc (TSLA): ${p_map.get('TSLA', 0):,.2f} CAD
+            """
             
-            st.write(ai_reply)
-            st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
-            st.rerun()
-
-st.markdown("---")
-st.caption("🤖 High-Velocity Production Node | Isolated Session Forms Enabled.")
-
-# 4. BACKGROUND REFRESH
-time.sleep(30)
-st.rerun()
+            try:
+                # ☁️ CLOUD DEEP LEARNING SYSTEM CORE
+                from groq import Groq
+                
+                # RECOVERY GUARD RULE: Grabs your private token variable safely
+                api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
+                if api_key_target == "WIPE":
+                    import ollama
+                    response = ollama.chat(model='llama3:8b', messages=[{'role': 'user', 'content': f"Context: {market_context_data} User question: {user_input_text}"}])
+                    ai_reply = response['message']['content']
+                else:
+                    client = Groq(api_key=api_key_target)
+                    completion = client.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        messages=[
+                            {"role": "system", "content": f"You are an expert financial analyst assistant. Answer user questions naturally. Use this real-time market data to give exact prices if the user asks: {market_context_data}. Limit your reply to a short, engaging maximum of 2 sentences."},
+                            {"role": "user", "content": user_input_text}
+                        ]
