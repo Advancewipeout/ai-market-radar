@@ -81,7 +81,7 @@ current_clock_time = datetime.now(local_timezone).strftime("%Y-%m-%d %I:%M:%S %p
 
 st.markdown(f"""
     <div class="brand-header-box">
-        <h1 class="brand-title">🌐 ADVANCE AI MATRIX SYSTEM</h1>
+        <h1 class="brand-title">🌐 SMITTY'S AI MATRIX SYSTEM</h1>
         <p class="brand-subtitle">Automated Multi-Asset Deep Sequential Momentum Radar</p>
         <p class="brand-timestamp">⚡ SYSTEM STATUS: ACTIVE | MATRIX SYNC TIME: {current_clock_time}</p>
     </div>
