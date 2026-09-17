@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import yfinance as yf
+import time
 
 # 1. PREMIUM PAGE CONFIGURATION
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
@@ -13,7 +14,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("📊 AI MULTIVARIATE DEEP LEARNING RADAR")
-st.subheader("Live Multi-Asset Ultra-Fast Tracking Dashboard")
+st.subheader("Live Multi-Asset Automated Prediction Dashboard")
 st.markdown("---")
 
 watchlist = ["BTC-CAD", "ETH-CAD", "SOL-CAD", "ARE.TO", "NVDA", "TSLA"]
@@ -89,4 +90,9 @@ with st.spinner("⚡ Pulling real-time market matrices..."):
             st.error(f"⚠️ Vector alignment glitch on {ticker}: {e}")
 
 st.markdown("---")
-st.caption("🤖 High-Velocity Trend Verification Pipeline actively optimized for remote cloud deployment frameworks.")
+st.caption("🤖 High-Velocity Trend Verification Pipeline actively updating on an automated live loop.")
+
+# 3. BUILT-IN AUTOMATED TIMER: 
+# Wait 30 seconds, then tell the website to automatically re-run its data pulls hands-free!
+time.sleep(30)
+st.rerun()
