@@ -70,6 +70,15 @@ st.markdown("""
         color: #cbd5e1;
         line-height: 1.5;
     }
+    /* Fixed scroll height for chat history containment */
+    .chat-container {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: #11141c;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -160,42 +169,44 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
         except Exception as e:
             st.error(f"⚠️ Vector alignment glitch on {ticker}: {e}")
 
-# 3. INTERACTIVE LEARNING CHATBOX LAYER
+# 3. ADVANCED LEARNING CHATBOX (WITH EXPLICIT MEMORY LOCK CHANNELS)
 st.markdown("---")
 st.header("💬 ADVANCE LEARNING CHAT INTERFACE")
 st.caption("Ask questions about market indicators, strategies, or crypto setups below.")
 
-# Keep chat history in browser session memory
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# Initialize independent persistent memory matrix banks
+if "chat_history_matrix" not in st.session_state:
+    st.session_state.chat_history_matrix = []
 
-# Show previous chat messages on refresh
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
+# Display conversation log securely inside session frames
+for chat in st.session_state.chat_history_matrix:
+    with st.chat_message(chat["role"]):
+        st.write(chat["content"])
 
-# Catch live user typing question input
-user_question = st.chat_input("Ask the Matrix AI a question (e.g., 'What is a stop loss?')...")
+# FORM MATRIX COUPLING: Hooks the text input field into an isolated state block 
+# to shield user typing text from the 30-second background stock refreshes!
+with st.form(key="chat_secure_form", clear_on_submit=True):
+    user_input_text = st.text_input("Ask the Matrix AI a question (e.g., 'What is a stop loss?')...")
+    submit_button = st.form_submit_button(label="⚡ Send to Matrix Brain")
 
-if user_question:
-    # Render user chat box instantly
-    with st.chat_message("user"):
-        st.write(user_question)
-    st.session_state.messages.append({"role": "user", "content": user_question})
+if submit_button and user_input_text:
+    # Commit user prompt immediately into state bank
+    st.session_state.chat_history_matrix.append({"role": "user", "content": user_input_text})
     
-    # Process AI Chat Response logic
+    # Force a direct layout redraw for instant user response mapping
+    with st.chat_message("user"):
+        st.write(user_input_text)
+        
     with st.chat_message("assistant"):
         with st.spinner("Analyzing question query parameters..."):
             try:
-                # 🖥️ DESKTOP MODE: Talks straight to your physical RTX 4060 Ti card!
                 import ollama
                 response = ollama.chat(model='llama3:8b', messages=[
-                    {'role': 'user', 'content': f"You are an expert financial analyst chatbot. Give a short 2-sentence answer to this user question: {user_question}"}
+                    {'role': 'user', 'content': f"You are an expert financial analyst chatbot. Give a short 2-sentence answer to this user question: {user_input_text}"}
                 ])
                 ai_reply = response['message']['content']
             except Exception:
-                # 🌐 CLOUD MODE FALLBACK: Smart structural lookup replies if opened on a phone online
-                q = user_question.lower()
+                q = user_input_text.lower()
                 if "stop loss" in q or "floor" in q:
                     ai_reply = "A Stop-Loss is an automated protective floor price order that automatically sells your asset if the price drops, guaranteeing your cash investment capital stays safe from massive market drops."
                 elif "buy" in q or "signal" in q:
@@ -203,10 +214,3 @@ if user_question:
                 elif "hold" in q:
                     ai_reply = "A Hold action signal indicates that the asset's price is currently moving inside a flat baseline consolidation channel. The system advises waiting until a volume-backed breakout happens."
                 else:
-                    ai_reply = "Welcome to the Advance Matrix node. For deep custom answers to that question, launch this script locally on your home desktop workstation to utilize the physical RTX 4060 Ti Llama 3 engine model!"
-            
-            st.write(ai_reply)
-            st.session_state.messages.append({"role": "assistant", "content": ai_reply})
-
-st.markdown("---")
-st.caption("🤖 High-Velocity Production Node | Automated Live Interface Loop Handshake Active.")
