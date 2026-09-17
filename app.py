@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import yfinance as yf
 
 # 1. PREMIUM PAGE CONFIGURATION
@@ -21,30 +22,38 @@ watchlist = ["BTC-CAD", "ETH-CAD", "SOL-CAD", "ARE.TO", "NVDA", "TSLA"]
 # Create 2 visual columns on the webpage layout
 col1, col2 = st.columns(2)
 
-with st.spinner("⚡ Pulling real-time market matrices..."):
+# AUTOMATED DATA CACHE PROTECTION LAYER (Expires every 600 seconds / 10 minutes)
+@st.cache_data(ttl=600)
+def fetch_secure_market_data(ticker):
+    df_download = yf.download(ticker, start="2021-01-01", progress=False, multi_level_index=False)
+    if df_download.empty:
+        return None
+    return df_download.to_json() # Convert to a stable text string format for secure cloud memory storage
+
+with st.spinner("⚡ Pulling real-time protected market matrices..."):
     # Fetch currency exchange metrics
     try:
-        fx_data = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
-        usd_to_cad = 1.0 / float(fx_data["Close"].to_numpy().flatten()[-1])
+        fx_raw = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
+        usd_to_cad = 1.0 / float(fx_raw["Close"].to_numpy().flatten()[-1])
     except:
         usd_to_cad = 1.36
 
     for index, ticker in enumerate(watchlist):
         try:
-            # Siphon historical dataset layers
-            df = yf.download(ticker, start="2021-01-01", progress=False, multi_level_index=False)
-            if df.empty or len(df) < 5:
+            # Call the protected data cache layer smoothly
+            json_data = fetch_secure_market_data(ticker)
+            if json_data is None:
                 continue
+            df = pd.read_json(json_data)
 
             current_actual_price = float(df["Close"].to_numpy().flatten()[-1])
             
-            # LIGHTWEIGHT VECTOR ALGORITHM: 
-            # Calculates the deep rolling momentum velocity instantly without heavy CPU strain
+            # High-Velocity Vector Momentum Engine
             recent_prices = df["Close"].tail(10).to_numpy().flatten()
-            momentum_velocity = (recent_prices[-1] - recent_prices[0]) / recent_prices[0]
+            momentum_velocity = (recent_prices[-1] - recent_prices) / recent_prices
             tomorrow_predicted_price = current_actual_price * (1.0 + (momentum_velocity * 0.25))
 
-            # Currency adjustments for US markets
+            # Currency adjustments for US tech assets
             is_us_stock = ticker in ["NVDA", "TSLA"]
             display_ticker = f"{ticker} (USD converted to CAD)" if is_us_stock else ticker
             
@@ -72,7 +81,7 @@ with st.spinner("⚡ Pulling real-time market matrices..."):
                 target_text = "N/A"
                 floor_text = "N/A"
 
-            # Allocate targeting column
+            # Allocate tracking dashboard column
             target_col = col1 if index % 2 == 0 else col2
             
             with target_col:
@@ -87,7 +96,7 @@ with st.spinner("⚡ Pulling real-time market matrices..."):
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Mapped Interactive Charts
+                # Mapped Interactive Trend Charts
                 chart_data = pd.DataFrame(df["Close"].tail(30))
                 if is_us_stock:
                     chart_data["Close"] *= usd_to_cad
@@ -97,4 +106,4 @@ with st.spinner("⚡ Pulling real-time market matrices..."):
             st.error(f"⚠️ Vector loop collision on {ticker}: {e}")
 
 st.markdown("---")
-st.caption("🤖 High-Velocity Trend Verification Pipeline actively optimized for remote cloud deployment frameworks.")
+st.caption("🤖 High-Velocity Trend Verification Pipeline actively backed by network memory data cache protections.")
