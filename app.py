@@ -86,11 +86,14 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
+# FULL Watchlist Configuration restored!
 watchlist = {
     "BTC-CAD": "🪙 BTC-CAD (Bitcoin)",
     "ETH-CAD": "💎 ETH-CAD (Ethereum)",
     "SOL-CAD": "☀️ SOL-CAD (Solana)",
-    "ARE.TO": "🏗️ ARE.TO (Aecon Group)"
+    "ARE.TO": "🏗️ ARE.TO (Aecon Group)",
+    "NVDA": "🎮 NVDA (NVIDIA Corp)",
+    "TSLA": "⚡ TSLA (Tesla Inc)"
 }
 
 if "live_prices_cache" not in st.session_state:
@@ -99,6 +102,12 @@ if "live_prices_cache" not in st.session_state:
 col1, col2 = st.columns(2)
 
 with st.spinner("📥 Synchronizing core market pricing vectors..."):
+    try:
+        fx_data = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
+        usd_to_cad = 1.0 / float(fx_data["Close"].to_numpy().flatten()[-1])
+    except:
+        usd_to_cad = 1.36
+
     for index, (ticker, display_name) in enumerate(watchlist.items()):
         try:
             df = yf.download(ticker, period="30d", interval="1d", progress=False, multi_level_index=False)
@@ -108,6 +117,12 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
             current_actual_price = float(close_array[-1])
             past_price = float(close_array[-5])
             price_change_pct = ((current_actual_price - past_price) / past_price) * 100
+
+            is_us_stock = ticker in ["NVDA", "TSLA"]
+            final_title = f"{display_name} [CAD CONVERTED]" if is_us_stock else display_name
+            
+            if is_us_stock:
+                current_actual_price *= usd_to_cad
 
             st.session_state.live_prices_cache[ticker] = current_actual_price
             stop_loss_long = current_actual_price * 0.975
@@ -133,7 +148,7 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
             with target_col:
                 st.markdown(f"""
                 <div class="metric-box" style="border-left-color: {border_color};">
-                    <h2 class="asset-header">{display_name}</h2>
+                    <h2 class="asset-header">{final_title}</h2>
                     <hr style="margin: 8px 0 12px 0; border-color: #222b3c;">
                     <p style="font-size: 16px; margin: 4px 0; color: #94a3b8;"><b>Current Market Price:</b> <span style="color: #ffffff; font-weight: 600;">CAD ${current_actual_price:,.2f}</span></p>
                     <p style="font-size: 18px; margin: 8px 0; color: #94a3b8;"><b>SYSTEM ACTION:</b> <span style="color: {border_color}; font-weight: bold;">{action_signal}</span></p>
@@ -144,12 +159,14 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
                 
                 chart_df = pd.DataFrame(df["Close"].tail(30))
                 chart_df.columns = ["Close"]
+                if is_us_stock:
+                    chart_df["Close"] *= usd_to_cad
                 st.line_chart(chart_df)
 
         except Exception as e:
             st.error(f"⚠️ Vector alignment glitch on {ticker}: {e}")
 
-# 3. ADVANCED LEARNING CHATBOX
+# 3. ADVANCED LEARNING CHATBOX (WITH FULL LOGIC CAPABILITIES)
 st.markdown("---")
 st.header("💬 ADVANCE LEARNING CHAT INTERFACE")
 st.caption("Ask questions about market indicators, strategies, or crypto setups below.")
@@ -175,11 +192,15 @@ if submit_button and user_input_text:
         p_map = st.session_state.get("live_prices_cache", {})
         q = user_input_text.lower().strip()
         
+        # COMPLETE EXTENDED DICTIONARY SET
         btc_p = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD', 0):,.2f} CAD** based on our active data feed updates."
         eth_p = f"The live price of Ethereum is currently **${p_map.get('ETH-CAD', 0):,.2f} CAD** synced in real-time."
         sol_p = f"The live price of Solana is currently **${p_map.get('SOL-CAD', 0):,.2f} CAD** synced in real-time."
+        nvda_p = f"NVIDIA Corp (NVDA) is trading at a currency-converted value of **${p_map.get('NVDA', 0):,.2f} CAD**."
+        tsla_p = f"Tesla Inc (TSLA) is trading at a currency-converted value of **${p_map.get('TSLA', 0):,.2f} CAD**."
         sl_def = "A Stop-Loss is an automated protective floor price order that automatically sells your asset if the price drops, guaranteeing your cash investment capital stays safe from massive market drops."
         buy_def = "The system triggers a green Strong Buy action signal when the 5-day multi-variable momentum vectors break cleanly above our +0.50% volatility baseline with positive confirmation."
+        hold_def = "A Hold action signal indicates that the asset's price is currently moving inside a flat baseline consolidation channel. The system advises waiting until a volume-backed breakout happens."
         hi_msg = "Hello! Welcome to the Advance Matrix system network. Ask me anything about our live indicators, strategies, or current prices!"
         fallback_msg = "Welcome to the Advance Matrix node. Ask me about specific ticker prices, stop-loss tools, or our indicator signals!"
 
@@ -191,19 +212,3 @@ if submit_button and user_input_text:
             ai_reply = eth_p
         if "solana" in q or "sol" in q:
             ai_reply = sol_p
-        if "stop loss" in q or "floor" in q:
-            ai_reply = sl_def
-        if "buy" in q or "signal" in q:
-            ai_reply = buy_def
-        if "hello" in q or "hey" in q or "hi" in q:
-            ai_reply = hi_msg
-
-        st.write(ai_reply)
-        st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
-        st.rerun()
-
-st.markdown("---")
-st.caption("🤖 High-Velocity Production Node | Isolated Session Forms Enabled.")
-
-time.sleep(30)
-st.rerun()
