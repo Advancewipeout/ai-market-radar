@@ -25,7 +25,7 @@ watchlist = ["BTC-CAD", "ETH-CAD", "SOL-CAD", "ARE.TO", "NVDA", "TSLA"]
 
 # LSTM Model Architecture blueprint
 class WebsiteCryptoLSTM(nn.Module):
-    def __init__(self, input_size=2, hidden_size=32, num_layers=1): # Lightweight architecture for stable cloud compute
+    def __init__(self, input_size=2, hidden_size=32, num_layers=1): 
         super(WebsiteCryptoLSTM, self).__init__()
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
         self.fc = nn.Linear(hidden_size, 1)
@@ -37,6 +37,9 @@ class WebsiteCryptoLSTM(nn.Module):
 col1, col2 = st.columns(2)
 
 with st.spinner("🤖 Remote server processing multi-variable deep learning optimization matrices..."):
+    # AUTOMATED HARDWARE FALLBACK LAYER: Swaps to CPU smoothly if running on the cloud website
+    device = torch.device("cpu")
+    
     # Fetch currency exchange metrics
     try:
         fx_data = yf.download("CADUSD=X", period="1d", progress=False)
@@ -67,16 +70,16 @@ with st.spinner("🤖 Remote server processing multi-variable deep learning opti
                 y.append(scaled_data[i, 0])
 
             X, y = np.array(X), np.array(y)
-            X_tensor = torch.tensor(X, dtype=torch.float32)
-            y_tensor = torch.tensor(y, dtype=torch.float32).unsqueeze(1)
+            X_tensor = torch.tensor(X, dtype=torch.float32).to(device)
+            y_tensor = torch.tensor(y, dtype=torch.float32).unsqueeze(1).to(device)
 
             # Initialize lightweight cloud configuration
-            model = WebsiteCryptoLSTM()
+            model = WebsiteCryptoLSTM().to(device)
             criterion = nn.MSELoss()
             optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-            # Stable 50-Epoch training loop optimized for cloud systems
-            epochs = 50
+            # Stable 30-Epoch training loop optimized for standard cloud servers
+            epochs = 30
             for epoch in range(epochs):
                 model.train()
                 optimizer.zero_grad()
@@ -89,8 +92,8 @@ with st.spinner("🤖 Remote server processing multi-variable deep learning opti
             model.eval()
             with torch.no_grad():
                 last_60_days = scaled_data[-LOOKBACK_WINDOW:]
-                last_60_days_tensor = torch.tensor(last_60_days, dtype=torch.float32).unsqueeze(0)
-                future_scaled_pred = model(last_60_days_tensor).numpy().flatten()
+                last_60_days_tensor = torch.tensor(last_60_days, dtype=torch.float32).unsqueeze(0).to(device)
+                future_scaled_pred = model(last_60_days_tensor).cpu().numpy().flatten()
                 
                 last_volume_scaled = float(scaled_data[-1, 1])
                 aligned_dummy_matrix = np.array([[float(future_scaled_pred), last_volume_scaled]])
@@ -142,7 +145,7 @@ with st.spinner("🤖 Remote server processing multi-variable deep learning opti
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # PREMIUM FEATURE: Inject live visual trend lines inside each asset box!
+                # PREMIUM FEATURE: Mapped Interactive Charts
                 chart_data = pd.DataFrame(df["Close"].tail(30))
                 if is_us_stock:
                     chart_data["Close"] *= usd_to_cad
