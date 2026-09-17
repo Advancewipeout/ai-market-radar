@@ -191,29 +191,24 @@ if submit_button and user_input_text:
     with st.chat_message("assistant"):
         with st.spinner("Analyzing question query parameters..."):
             p_map = st.session_state.get("live_prices_cache", {})
-            market_context_data = f"""
-            System Matrix Live Context:
-            - Bitcoin (BTC-CAD): ${p_map.get('BTC-CAD', 0):,.2f} CAD
-            - Ethereum (ETH-CAD): ${p_map.get('ETH-CAD', 0):,.2f} CAD
-            - Solana (SOL-CAD): ${p_map.get('SOL-CAD', 0):,.2f} CAD
-            - Aecon Group (ARE.TO): ${p_map.get('ARE.TO', 0):,.2f} CAD
-            - NVIDIA Corp (NVDA): ${p_map.get('NVDA', 0):,.2f} CAD
-            - Tesla Inc (TSLA): ${p_map.get('TSLA', 0):,.2f} CAD
-            """
             
-            # SECURE CLOUD GATEWAY: Completely removed the broken try/except loops
-            api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
-            
-            if api_key_target == "WIPE":
-                # Clean, un-nested text-matching algorithm
-                q = user_input_text.lower()
-                if "price" in q or "value" in q or "much" in q:
-                    if "bitcoin" in q or "btc" in q:
-                        ai_reply = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD', 0):,.2f} CAD** based on our active data feed updates."
-                    elif "ethereum" in q or "eth" in q:
-                        ai_reply = f"The live price of Ethereum is currently **${p_map.get('ETH-CAD', 0):,.2f} CAD** synced in real-time."
-                    elif "nvidia" in q or "nvda" in q:
-                        ai_reply = f"NVIDIA Corp (NVDA) is trading at a currency-converted value of **${p_map.get('NVDA', 0):,.2f} CAD**."
-                    elif "tesla" in q or "tsla" in q:
-                        ai_reply = f"Tesla Inc (TSLA) is trading at a currency-converted value of **${p_map.get('TSLA', 0):,.2f} CAD**."
-                    else:
+            btc_p = f"The live price of Bitcoin is currently **${p_map.get('BTC-CAD', 0):,.2f} CAD** based on our active data feed updates."
+            eth_p = f"The live price of Ethereum is currently **${p_map.get('ETH-CAD', 0):,.2f} CAD** synced in real-time."
+            nvda_p = f"NVIDIA Corp (NVDA) is trading at a currency-converted value of **${p_map.get('NVDA', 0):,.2f} CAD**."
+            tsla_p = f"Tesla Inc (TSLA) is trading at a currency-converted value of **${p_map.get('TSLA', 0):,.2f} CAD**."
+            sl_def = "A Stop-Loss is an automated protective floor price order that automatically sells your asset if the price drops, guaranteeing your cash investment capital stays safe from massive market drops."
+            buy_def = "The system triggers a green Strong Buy action signal when the 5-day multi-variable momentum vectors break cleanly above our +0.50% volatility baseline with positive confirmation."
+            hold_def = "A Hold action signal indicates that the asset's price is currently moving inside a flat baseline consolidation channel. The system advises waiting until a volume-backed breakout happens."
+            fallback_msg = "Welcome to the Advance Matrix node. For deep custom answers, connect your Groq API key or run this locally to utilize the physical RTX 4060 Ti Llama 3 engine model!"
+
+            keyword_responses = {
+                "bitcoin": btc_p, "btc": btc_p,
+                "ethereum": eth_p, "eth": eth_p,
+                "nvidia": nvda_p, "nvda": nvda_p,
+                "tesla": tsla_p, "tsla": tsla_p,
+                "stop loss": sl_def, "floor": sl_def,
+                "buy": buy_def, "signal": buy_def,
+                "hold": hold_def
+            }
+
+            user_query_clean = user_input_text.lower().strip()
