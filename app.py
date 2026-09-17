@@ -2,7 +2,7 @@ import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time, json, u
 from datetime import datetime
 import pytz
 
-# 1. PREMIUM BRANDING & FLUID ANIMATED GRADIENT CONFIGURATION
+# 1. VISUAL LAYER LAYER STYLING MATRIX (WITH GRADIENT MOVEMENT ENGINE)
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""
     <style>
@@ -11,7 +11,7 @@ st.markdown("""
     .brand-title { font-size: 38px !important; font-weight: 800 !important; letter-spacing: 2px; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; text-shadow: 0 0 40px rgba(99, 102, 241, 0.4); }
     .brand-subtitle { color: #94a3b8; font-size: 16px; font-weight: 500; letter-spacing: 1px; margin: 0px 0px 15px 0px !important; }
     
-    /* HIGH-TECH CONTINUOUS CHROMATIC BORDER CORES */
+    /* EXTRA-LIVE AUTOMATED RECYCLING GRADIENT CARDS */
     .metric-box {
         position: relative;
         background-color: #151922;
@@ -39,23 +39,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 2. RENDER THE PRIMARY CORE BRAND HEADER LAYOUT
-st.markdown("""
-    <div class='brand-header-box'>
-        <h1 class='brand-title'>🌐 SMITTY'S AI MATRIX SYSTEM</h1>
-        <p class='brand-subtitle'>Automated Multi-Asset Deep Sequential Momentum Radar</p>
-    </div>
-""", unsafe_allow_html=True)
-
-# Isolated container placeholder for the high-velocity live clock sub-line
-local_tz = pytz.timezone("America/Toronto")
-clock_placeholder = st.empty()
-
 watchlist = {"BTC-CAD": "🪙 BTC-CAD (Bitcoin)", "ETH-CAD": "💎 ETH-CAD (Ethereum)", "SOL-CAD": "☀️ SOL-CAD (Solana)", "ARE.TO": "🏗️ ARE.TO (Aecon Group)", "NVDA": "🎮 NVDA (NVIDIA Corp)", "TSLA": "⚡ TSLA (Tesla Inc)"}
 if "live_prices_cache" not in st.session_state: st.session_state.live_prices_cache = {}
 if "chat_history_matrix" not in st.session_state: st.session_state.chat_history_matrix = []
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=5)
 def get_live_market_vectors():
     try:
         fx_df = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
@@ -79,46 +67,61 @@ def get_live_market_vectors():
         except: pass
     return store
 
-# Pull assets quietly into background data store lane away from the layout components
-asset_data_store = get_live_market_vectors()
-for k, data in asset_data_store.items(): st.session_state.live_prices_cache[k] = data["price"]
+# 🚀 AUTOMATED DEPLOYMENT THREAD CONTAINER: RUNS THE SECONDS TICK & LIVE PRICING AS ONE
+@st.fragment(run_every=1.0)
+def render_live_matrix_grid():
+    clock = datetime.now(pytz.timezone("America/Toronto")).strftime("%Y-%m-%d %I:%M:%S %p")
+    st.markdown(f"""
+        <div class='brand-header-box'>
+            <h1 class='brand-title'>🌐 SMITTY'S AI MATRIX SYSTEM</h1>
+            <p class='brand-subtitle'>Automated Multi-Asset Deep Sequential Momentum Radar</p>
+            <p style='color: #00ffcc; font-family: monospace; font-size: 14px; font-weight: 600; margin: 0; letter-spacing: 1px;'>⚡ SYSTEM STATUS: ACTIVE | MATRIX LIVE SYNC TIME: {clock}</p>
+        </div>
+    """, unsafe_allow_html=True)
 
-# Render static cards grid: These are now completely safe from being interrupted by the clock thread!
-col1, col2 = st.columns(2)
-for index, ticker in enumerate(watchlist.keys()):
-    if ticker in asset_data_store:
-        data = asset_data_store[ticker]
-        v = data['pct']
-        
-        if ticker == "BTC-CAD":
-            strat, intel = f"The system model plans to maintain this Bitcoin hold position for 3 to 5 days, executing a strict take-profit sell order once velocity breaks past CAD ${data['target']:,.2f}.", "🐦 Twitter Buzz Sentiment: Heavy social accumulation trends detected as whales defend the $107k support floor baseline vector."
-        elif ticker == "ETH-CAD":
-            strat, intel = f"The algorithmic model will hold Ethereum for the next 48-72 hours, executing an automated distribution liquidation order near the upper CAD ${data['target']:,.2f} tracking band.", "📰 Market Flash Intel: Network gas metric compressions indicate short-term consolidation before an imminent volume-backed volatility thrust wave."
-        elif ticker == "SOL-CAD":
-            strat, intel = f"Solana filters recommend a secure holding horizon of 4 days, targeting an aggressive long entry exit parameter point at CAD ${data['target']:,.2f}.", "🔥 Social Volume Radar: Retail discussion volumes have surged by 12% across trading channels, signaling bullish breakout continuation trends."
-        elif ticker == "ARE.TO":
-            strat, intel = f"The industrial sequence vector maps a holding timeframe of 1 to 2 weeks, protecting assets until price scales over CAD ${data['target']:,.2f}.", "🏗️ Corporate Order Flow: Canadian infrastructure accumulation remains heavily balanced with quiet institutional accumulation patterns."
-        elif ticker == "NVDA":
-            strat, intel = f"Currency-converted AI layers forecast a short-term momentum hold strategy for 3 days, trigger-selling positions precisely at CAD ${data['target']:,.2f}.", "🎮 Tech Hardware Pipeline: Next-generation GPU production upgrades are driving heavy social media hype cycles and options market interest."
-        else:
-            strat, intel = f"Tesla's momentum loops intend to hold the underlying security assets for 5 trading sessions, closing positions near CAD ${data['target']:,.2f}.", "⚡ Tesla Sentiment Tracker: Autonomous driving development updates have sparked massive retail chatter and short-squeeze risks."
+    asset_data_store = get_live_market_vectors()
+    for k, data in asset_data_store.items(): st.session_state.live_prices_cache[k] = data["price"]
 
-        with col1 if index % 2 == 0 else col2:
-            st.markdown(f"""
-            <div class='metric-box {data['glow']}'>
-                <h2 style='color:#ffffff; margin:0 0 10px 0;'>{data['display_name']}</h2>
-                <hr style='border-color:#222b3c; margin: 8px 0 12px 0;'>
-                <p style='margin:4px 0;'><b>Current Market Price:</b> CAD ${data['price']:,.2f}</p>
-                <p style='margin:4px 0;'><b>Neural Wave Target:</b> CAD ${data['target']:,.2f} ({data['pct']:+.2f}%)</p>
-                <p style='margin:8px 0; font-size:18px;'><b>SYSTEM ACTION:</b> <span style='color:{data['color']}; font-weight:bold;'>{data['sig']}</span></p>
-                <p style='margin:4px 0; font-size:14px; color:#cbd5e1;'>🎯 <b>Take-Profit Target:</b> {data['tp']} | 🛑 <b>Stop-Loss Floor:</b> {data['sl']}</p>
-                <div class='ai-analysis'>🤖 <b>Neural AI Analyst:</b> {strat}</div>
-                <div class='news-box'>📰 <b>Live Market Intelligence:</b> {intel}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.line_chart(pd.DataFrame(data['df']["Close"].tail(30)))
+    col1, col2 = st.columns(2)
+    for index, ticker in enumerate(watchlist.keys()):
+        if ticker in asset_data_store:
+            data = asset_data_store[ticker]
+            v = data['pct']
+            
+            if ticker == "BTC-CAD":
+                strat, intel = f"The system model plans to maintain this Bitcoin hold position for 3 to 5 days, executing a strict take-profit sell order once velocity breaks past CAD ${data['target']:,.2f}.", "🐦 Twitter Buzz Sentiment: Heavy social accumulation trends detected as whales defend the $107k support floor baseline vector."
+            elif ticker == "ETH-CAD":
+                strat, intel = f"The algorithmic model will hold Ethereum for the next 48-72 hours, executing an automated distribution liquidation order near the upper CAD ${data['target']:,.2f} tracking band.", "📰 Market Flash Intel: Network gas metric compressions indicate short-term consolidation before an imminent volume-backed volatility thrust wave."
+            elif ticker == "SOL-CAD":
+                strat, intel = f"Solana filters recommend a secure holding horizon of 4 days, targeting an aggressive long entry exit parameter point at CAD ${data['target']:,.2f}.", "🔥 Social Volume Radar: Retail discussion volumes have surged by 12% across trading channels, signaling bullish breakout continuation trends."
+            elif ticker == "ARE.TO":
+                strat, intel = f"The industrial sequence vector maps a holding timeframe of 1 to 2 weeks, protecting assets until price scales over CAD ${data['target']:,.2f}.", "🏗️ Corporate Order Flow: Canadian infrastructure accumulation remains heavily balanced with quiet institutional accumulation patterns."
+            elif ticker == "NVDA":
+                strat, intel = f"Currency-converted AI layers forecast a short-term momentum hold strategy for 3 days, trigger-selling positions precisely at CAD ${data['target']:,.2f}.", "🎮 Tech Hardware Pipeline: Next-generation GPU production upgrades are driving heavy social media hype cycles and options market interest."
+            else:
+                strat, intel = f"Tesla's momentum loops intend to hold the underlying security assets for 5 trading sessions, closing positions near CAD ${data['target']:,.2f}.", "⚡ Tesla Sentiment Tracker: Autonomous driving development updates have sparked massive retail chatter and short-squeeze risks."
 
-# 3. CONVERSATIONAL MATRICES ROOM
+            with col1 if index % 2 == 0 else col2:
+                st.markdown(f"""
+                <div class='metric-box {data['glow']}'>
+                    <h2 style='color:#ffffff; margin:0 0 10px 0;'>{data['display_name']}</h2>
+                    <hr style='border-color:#222b3c; margin: 8px 0 12px 0;'>
+                    <p style='margin:4px 0;'><b>Current Market Price:</b> CAD ${data['price']:,.2f}</p>
+                    <p style='margin:4px 0;'><b>Neural Wave Target:</b> CAD ${data['target']:,.2f} ({v:+.2f}%)</p>
+                    <p style='margin:8px 0; font-size:18px;'><b>SYSTEM ACTION:</b> <span style='color:{data['color']}; font-weight:bold;'>{data['sig']}</span></p>
+                    <p style='margin:4px 0; font-size:14px; color:#cbd5e1;'>🎯 <b>Take-Profit Target:</b> {data['tp']} | 🛑 <b>Stop-Loss Floor:</b> {data['sl']}</p>
+                    <div class='ai-analysis'>🤖 <b>Neural AI Analyst:</b> {strat}</div>
+                    <div class='news-box'>📰 <b>Live Market Intelligence:</b> {intel}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.line_chart(pd.DataFrame(data['df']["Close"].tail(30)))
+
+# Render live dashboard metrics
+render_live_matrix_grid()
+
+api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
+
+# 3. INTERACTIVE CHAT ENGINE WITH LIGHTWEIGHT RE-ROUTING
 st.markdown("---")
 st.header("💬 SMITTY'S LEARNING CHAT INTERFACE")
 for chat in st.session_state.chat_history_matrix:
@@ -128,12 +131,9 @@ with st.form(key="chat_secure_form", clear_on_submit=True):
     user_input_text = st.text_input("Ask the Matrix AI a question...")
     submit_button = st.form_submit_button(label="⚡ Send to Matrix Brain")
 
-api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
 if submit_button and user_input_text:
     st.session_state.chat_history_matrix.append({"role": "user", "content": user_input_text})
     with st.chat_message("user"): st.write(user_input_text)
     with st.chat_message("assistant"):
         p_map = st.session_state.live_prices_cache
         q = user_input_text.lower().strip()
-        ctx_data = f"Bitcoin: ${p_map.get('BTC-CAD',0):,.2f}, Ethereum: ${p_map.get('ETH-CAD',0):,.2f}, Solana: ${p_map.get('SOL-CAD',0):,.2f}, NVIDIA: ${p_map.get('NVDA',0):,.2f}, Tesla: ${p_map.get('TSLA',0):,.2f} CAD."
-        
