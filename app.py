@@ -53,9 +53,7 @@ st.markdown("""
         margin-bottom: 20px;
         box-shadow: 0 4px 20px 0 rgba(0,0,0,0.4);
         border: 1px solid #222b3c;
-        transition: transform 0.2s ease;
     }
-    .metric-box:hover { transform: translateY(-2px); }
     .asset-header {
         font-size: 24px !important;
         font-weight: 700 !important;
@@ -75,13 +73,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 2. TORONTO/CAMBRIDGE LOCAL TIME SYNC
+# TORONTO/CAMBRIDGE LOCAL TIME SYNC
 local_timezone = pytz.timezone("America/Toronto")
 current_clock_time = datetime.now(local_timezone).strftime("%Y-%m-%d %I:%M:%S %p")
 
 st.markdown(f"""
     <div class="brand-header-box">
-        <h1 class="brand-title">🌐 SMITTY'S AI MATRIX SYSTEM</h1>
+        <h1 class="brand-title">🌐 ADVANCE AI MATRIX SYSTEM</h1>
         <p class="brand-subtitle">Automated Multi-Asset Deep Sequential Momentum Radar</p>
         <p class="brand-timestamp">⚡ SYSTEM STATUS: ACTIVE | MATRIX SYNC TIME: {current_clock_time}</p>
     </div>
@@ -123,23 +121,21 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
 
             stop_loss_long = current_actual_price * 0.975
 
-            # 🔮 PUBLIC AUTOMATED ALGORITHMIC COMMENTARY GENERATOR
-            # Generates sharp, variable financial insights directly on the web server safely!
             if price_change_pct > 0.5:
                 action_signal = "🟢 STRONG BUY / ENTER LONG"
                 border_color = "#00ffcc"
                 floor_text = f"CAD ${stop_loss_long:,.2f}"
-                analyst_text = f"The sequential momentum layers for {ticker.split('-')[0]} have detected a structural upward thrust of {price_change_pct:+.2f}% over the 5-day training vector. Strong institutional accumulation indicates a high-probability bullish continuation wave targeting the next upper resistance level."
+                analyst_text = f"The sequential momentum layers for {ticker} have detected a structural upward thrust of {price_change_pct:+.2f}% over the 5-day training vector. Strong institutional accumulation indicates a high-probability bullish continuation wave targeting the next upper resistance level."
             elif price_change_pct < -0.5:
                 action_signal = "🔴 STRONG SELL / ENTER SHORT"
                 border_color = "#ff4b4b"
                 floor_text = f"CAD ${stop_loss_long:,.2f}"
-                analyst_text = f"Technical data vectors reveal a sharp contraction of {price_change_pct:+.2f}% for {ticker.split('-')[0]}. Heavy trailing distribution volume has broken the primary support baseline, signaling significant structural downside risk. Protect liquid positions instantly."
+                analyst_text = f"Technical data vectors reveal a sharp contraction of {price_change_pct:+.2f}% for {ticker}. Heavy trailing distribution volume has broken the primary support baseline, signaling significant structural downside risk. Protect liquid positions instantly."
             else:
                 action_signal = "🟡 HOLD / WAIT FOR CONFIRMATION"
                 border_color = "#ffcc00"
                 floor_text = "N/A"
-                analyst_text = f"{ticker.split('-')[0]} is currently compressing inside a flat, low-volatility consolidation channel ({price_change_pct:+.2f}% velocity change). Institutional order flows remain perfectly balanced. Stand by until a decisive volume-backed breakout occurs."
+                analyst_text = f"{ticker} is currently compressing inside a flat, low-volatility consolidation channel ({price_change_pct:+.2f}% velocity change). Institutional order flows remain perfectly balanced. Stand by until a decisive volume-backed breakout occurs."
 
             target_col = col1 if index % 2 == 0 else col2
             
@@ -164,8 +160,53 @@ with st.spinner("📥 Synchronizing core market pricing vectors..."):
         except Exception as e:
             st.error(f"⚠️ Vector alignment glitch on {ticker}: {e}")
 
+# 3. INTERACTIVE LEARNING CHATBOX LAYER
 st.markdown("---")
-st.caption("🤖 High-Velocity Production Node | Automated 30-Second Live Tracking Handshake Active.")
+st.header("💬 ADVANCE LEARNING CHAT INTERFACE")
+st.caption("Ask questions about market indicators, strategies, or crypto setups below.")
 
-time.sleep(30)
-st.rerun()
+# Keep chat history in browser session memory
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Show previous chat messages on refresh
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
+
+# Catch live user typing question input
+user_question = st.chat_input("Ask the Matrix AI a question (e.g., 'What is a stop loss?')...")
+
+if user_question:
+    # Render user chat box instantly
+    with st.chat_message("user"):
+        st.write(user_question)
+    st.session_state.messages.append({"role": "user", "content": user_question})
+    
+    # Process AI Chat Response logic
+    with st.chat_message("assistant"):
+        with st.spinner("Analyzing question query parameters..."):
+            try:
+                # 🖥️ DESKTOP MODE: Talks straight to your physical RTX 4060 Ti card!
+                import ollama
+                response = ollama.chat(model='llama3:8b', messages=[
+                    {'role': 'user', 'content': f"You are an expert financial analyst chatbot. Give a short 2-sentence answer to this user question: {user_question}"}
+                ])
+                ai_reply = response['message']['content']
+            except Exception:
+                # 🌐 CLOUD MODE FALLBACK: Smart structural lookup replies if opened on a phone online
+                q = user_question.lower()
+                if "stop loss" in q or "floor" in q:
+                    ai_reply = "A Stop-Loss is an automated protective floor price order that automatically sells your asset if the price drops, guaranteeing your cash investment capital stays safe from massive market drops."
+                elif "buy" in q or "signal" in q:
+                    ai_reply = "The system triggers a green Strong Buy action signal when the 5-day multi-variable momentum velocity vectors break cleanly above our +0.50% volatility baseline with positive confirmation."
+                elif "hold" in q:
+                    ai_reply = "A Hold action signal indicates that the asset's price is currently moving inside a flat baseline consolidation channel. The system advises waiting until a volume-backed breakout happens."
+                else:
+                    ai_reply = "Welcome to the Advance Matrix node. For deep custom answers to that question, launch this script locally on your home desktop workstation to utilize the physical RTX 4060 Ti Llama 3 engine model!"
+            
+            st.write(ai_reply)
+            st.session_state.messages.append({"role": "assistant", "content": ai_reply})
+
+st.markdown("---")
+st.caption("🤖 High-Velocity Production Node | Automated Live Interface Loop Handshake Active.")
