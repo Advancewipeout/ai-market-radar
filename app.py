@@ -11,18 +11,17 @@ st.markdown("""
     .brand-title { font-size: 38px !important; font-weight: 800 !important; letter-spacing: 2px; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; text-shadow: 0 0 40px rgba(99, 102, 241, 0.4); }
     .brand-subtitle { color: #94a3b8; font-size: 16px; font-weight: 500; letter-spacing: 1px; margin: 0px 0px 8px 0px !important; }
     .brand-timestamp { color: #00ffcc; font-size: 14px; font-weight: 600; letter-spacing: 1px; margin: 0 !important; font-family: monospace; }
-    .metric-box { background-color:#151922; padding:24px; border-radius:14px; margin-bottom:20px; border:1px solid #222b3c; border-left: 2px solid #6366f1; }
+    .metric-box { background-color:#151922; padding:24px; border-radius:14px; margin-bottom:20px; border:1px solid #222b3c; }
     .asset-header { font-size: 24px !important; font-weight: 700 !important; color: #ffffff; margin: 0 0 10px 0 !important; }
     .ai-analysis { background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; line-height: 1.5; }
     .news-box { background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; line-height: 1.5; }
     </style>
 """, unsafe_allow_html=True)
 
-# 2. ISOLATED SMOOTH TIMESTAMP CONTAINER LOOP
+# 2. ISOLATED SMOOTH TIMESTAMP CONTAINER HOOK
 local_tz = pytz.timezone("America/Toronto")
 header_placeholder = st.empty()
 
-# We render the static brand box frames using your exact variables
 watchlist = {"BTC-CAD": "🪙 BTC-CAD (Bitcoin)", "ETH-CAD": "💎 ETH-CAD (Ethereum)", "SOL-CAD": "☀️ SOL-CAD (Solana)", "ARE.TO": "🏗️ ARE.TO (Aecon Group)", "NVDA": "🎮 NVDA (NVIDIA Corp)", "TSLA": "⚡ TSLA (Tesla Inc)"}
 if "live_prices_cache" not in st.session_state: st.session_state.live_prices_cache = {}
 if "chat_history_matrix" not in st.session_state: st.session_state.chat_history_matrix = []
@@ -38,22 +37,33 @@ try:
 except: usd_to_cad = 1.36
 
 asset_data_store = {}
-for ticker, display_name in watchlist.items():
-    df = fetch_ticker_data_safely(ticker)
-    if df is not None and not df.empty:
-        try:
-            df.columns = [str(c).strip().capitalize() for col in [df.columns] for c in col]
-            close_arr = df["Close"].to_numpy().flatten()
-            price = float(close_arr[-1])
-            if ticker in ["NVDA", "TSLA"]: price *= usd_to_cad
-            st.session_state.live_prices_cache[ticker] = price
-            pct = ((price - float(close_arr[-5])) / float(close_arr[-5])) * 100
-            target_price = price * (1.0 + (pct * 0.05 / 100))
-            stop_long, stop_short = price * 0.975, price * 1.025
-            sig, color = ("🟡 HOLD", "#ffcc00") if abs(pct) <= 0.5 else (("🟢 BUY", "#00ffcc") if pct > 0.5 else ("🔴 SELL", "#ff4b4b"))
-            tp_text, sl_text = (f"CAD ${target_price:,.2f}", f"CAD ${stop_long:,.2f}" if pct > 0.5 else f"CAD ${stop_short:,.2f}") if abs(pct) > 0.5 else ("N/A", "N/A")
-            asset_data_store[ticker] = {"display_name": display_name, "price": price, "target": target_price, "pct": pct, "sig": sig, "color": color, "tp": tp_text, "sl": sl_text, "df": df}
-        except: pass
+with st.spinner("📥 Synchronizing core market pricing vectors..."):
+    for ticker, display_name in watchlist.items():
+        df = fetch_ticker_data_safely(ticker)
+        if df is not None and not df.empty:
+            try:
+                df.columns = [str(c).strip().capitalize() for col in [df.columns] for c in col]
+                close_arr = df["Close"].to_numpy().flatten()
+                price = float(close_arr[-1])
+                if ticker in ["NVDA", "TSLA"]: price *= usd_to_cad
+                st.session_state.live_prices_cache[ticker] = price
+                pct = ((price - float(close_arr[-5])) / float(close_arr[-5])) * 100
+                target_price = price * (1.0 + (pct * 0.05 / 100))
+                stop_long, stop_short = price * 0.975, price * 1.025
+                
+                # YOUR EXACT PREMIUM SYSTEM ACTION DIRECTIVES RESTORED!
+                if pct > 0.5:
+                    sig, color = "🟢 STRONG BUY / ENTER LONG", "#00ffcc"
+                    tp_text, sl_text = f"CAD ${target_price:,.2f}", f"CAD ${stop_long:,.2f}"
+                elif pct < -0.5:
+                    sig, color = "🔴 STRONG SELL / ENTER SHORT", "#ff4b4b"
+                    tp_text, sl_text = f"CAD ${target_price:,.2f}", f"CAD ${stop_short:,.2f}"
+                else:
+                    sig, color = "🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00"
+                    tp_text, sl_text = "N/A", "N/A"
+                    
+                asset_data_store[ticker] = {"display_name": display_name, "price": price, "target": target_price, "pct": pct, "sig": sig, "color": color, "tp": tp_text, "sl": sl_text, "df": df}
+            except: pass
 
 col1, col2 = st.columns(2)
 for index, ticker in enumerate(watchlist.keys()):
@@ -65,14 +75,14 @@ for index, ticker in enumerate(watchlist.keys()):
             strat_txt = f"The system model plans to maintain this Bitcoin hold position for 3 to 5 days, executing a strict take-profit sell order once velocity breaks past CAD ${data['target']:,.2f}."
             intel_txt = "🐦 Twitter Buzz Sentiment: Heavy social accumulation trends detected as whales defend the $107k support floor baseline vector."
         elif ticker == "ETH-CAD":
-            strat_txt = f"The system loop will hold Ethereum for 48-72 hours, targeting trailing structural liquidation points near CAD ${data['target']:,.2f}."
-            intel_txt = "📰 Market Flash: Compressed transaction gas metrics forecast an imminent high-volume structural expansion wave."
+            strat_txt = f"The algorithmic model will hold Ethereum for the next 48-72 hours, executing an automated distribution liquidation order near the upper CAD ${data['target']:,.2f} tracking band."
+            intel_txt = "📰 Market Flash Intel: Network gas metric compressions indicate short-term consolidation before an imminent volume-backed volatility thrust wave."
         elif ticker == "SOL-CAD":
-            strat_txt = f"Solana trackers recommend a 4-day holding perimeter window, pinpointing exit waves around CAD ${data['target']:,.2f}."
-            intel_txt = "🔥 Volume Radar: Active discussion parameters surged 12% across trading community node layers."
+            strat_txt = f"Solana filters recommend a secure holding horizon of 4 days, targeting an aggressive long entry exit parameter point at CAD ${data['target']:,.2f}."
+            intel_txt = "🔥 Social Volume Radar: Retail discussion volumes have surged by 12% across trading channels, signaling bullish breakout continuation trends."
         elif ticker == "ARE.TO":
-            strat_txt = f"Industrial models flag a long-horizon hold timeframe of 1-2 weeks, protecting assets until hitting CAD ${data['target']:,.2f}."
-            intel_txt = "🏗️ Order Flows: Canadian construction infrastructure sectors maintain massive baseline support blocks."
+            strat_txt = f"The industrial sequence vector maps a holding timeframe of 1 to 2 weeks, protecting assets until price scales over CAD ${data['target']:,.2f}."
+            intel_txt = "🏗️ Corporate Order Flow: Canadian infrastructure accumulation remains heavily balanced with quiet institutional accumulation patterns."
         elif ticker == "NVDA":
             strat_txt = f"Currency-converted AI layers forecast a short-term momentum hold strategy for 3 days, trigger-selling positions precisely at CAD ${data['target']:,.2f}."
             intel_txt = "🎮 Tech Hardware Pipeline: Next-generation GPU production upgrades are driving heavy social media hype cycles and options market interest."
@@ -80,9 +90,12 @@ for index, ticker in enumerate(watchlist.keys()):
             strat_txt = f"Tesla's momentum loops intend to hold the underlying security assets for 5 trading sessions, closing positions near CAD ${data['target']:,.2f}."
             intel_txt = "⚡ Tesla Sentiment Tracker: Autonomous driving development updates have sparked massive retail chatter and short-squeeze risks."
 
+        # YOUR PRECISE THIN 2PX ACCENT BORDER PRESERVED
+        border_width = "2px"
+
         with col1 if index % 2 == 0 else col2:
             st.markdown(f"""
-            <div class='metric-box' style='border-left-color: {data['color']};'>
+            <div class='metric-box' style='border-left: {border_width} solid {data['color']};'>
                 <h2 class='asset-header'>{data['display_name']}</h2>
                 <hr style='border-color:#222b3c; margin: 8px 0 12px 0;'>
                 <p style='margin:4px 0;'><b>Current Market Price:</b> CAD ${data['price']:,.2f}</p>
@@ -121,13 +134,3 @@ if submit_button and user_input_text:
                 req = urllib.request.Request(url, data=json.dumps({"model": "openai/gpt-oss-120b", "messages": [{"role": "system", "content": f"You are an expert financial analyst. Live data: {ctx_data}."}, {"role": "user", "content": user_input_text}]}).encode("utf-8"), headers={"Authorization": f"Bearer {api_key_target}", "Content-Type": "application/json"}, method="POST")
                 with urllib.request.urlopen(req) as response: ai_reply = json.loads(response.read().decode("utf-8"))["choices"]["message"]["content"]
             except: ai_reply = f"Sync matrix data: {ctx_data}"
-        st.write(ai_reply)
-        st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
-        st.rerun()
-
-st.markdown("---")
-st.caption("🤖 High-Velocity Production Node | Isolated Session Forms Enabled.")
-
-# 🔥 STREAMING PACER: TICK THE CLOCK BY SECONDS LOCALLY WITHOUT THE SCREEN BLINKING
-while True:
-    clock = datetime.now(local_tz).strftime("%Y-%m-%d %I:%M:%S %p")
