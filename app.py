@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import yfinance as yf
 import time
 from datetime import datetime
@@ -189,7 +190,6 @@ if submit_button and user_input_text:
         
     with st.chat_message("assistant"):
         with st.spinner("Analyzing question query parameters..."):
-            # Clean data array strings mapping live dashboard numbers right into the AI context layers
             p_map = st.session_state.get("live_prices_cache", {})
             market_context_data = f"""
             System Matrix Live Context:
@@ -202,20 +202,22 @@ if submit_button and user_input_text:
             """
             
             try:
-                # ☁️ CLOUD DEEP LEARNING SYSTEM CORE
                 from groq import Groq
-                
-                # RECOVERY GUARD RULE: Grabs your private token variable safely
                 api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
                 if api_key_target == "WIPE":
                     import ollama
-                    response = ollama.chat(model='llama3:8b', messages=[{'role': 'user', 'content': f"Context: {market_context_data} User question: {user_input_text}"}])
+                    response = ollama.chat(model='llama3:8b', messages=[
+                        {'role': 'user', 'content': f"Context data: {market_context_data} Question: {user_input_text}. Answer in max 2 short sentences."}
+                    ])
                     ai_reply = response['message']['content']
                 else:
                     client = Groq(api_key=api_key_target)
                     completion = client.chat.completions.create(
                         model="llama-3.1-8b-instant",
                         messages=[
-                            {"role": "system", "content": f"You are an expert financial analyst assistant. Answer user questions naturally. Use this real-time market data to give exact prices if the user asks: {market_context_data}. Limit your reply to a short, engaging maximum of 2 sentences."},
+                            {"role": "system", "content": f"You are an expert financial analyst assistant. Answer user questions naturally. Use this real-time market data to give exact prices if the user asks: {market_context_data}. Limit your reply to a short maximum of 2 sentences."},
                             {"role": "user", "content": user_input_text}
                         ]
+                    )
+                    ai_reply = completion.choices.message.content
+            except Exception as e:
