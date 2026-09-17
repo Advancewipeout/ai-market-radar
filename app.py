@@ -69,7 +69,7 @@ for index, ticker in enumerate(watchlist.keys()):
             intel_txt = "⚡ Tesla Sentiment Tracker: Autonomous driving development updates have sparked massive retail chatter and short-squeeze risks."
 
         # METRIC CORNER FRAMES: Bitcoin stays thick 6px border | All other containers stay thin 2px border!
-        border_width = "6px" if ticker == "BTC-CAD" else "2px"
+        border_width = "2px" if ticker == "BTC-CAD" else "2px"
 
         with col1 if index % 2 == 0 else col2:
             st.markdown(f"""
