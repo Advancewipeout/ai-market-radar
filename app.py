@@ -2,7 +2,7 @@ import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time, json, u
 from datetime import datetime
 import pytz
 
-# 1. PREMIUM HEADER CONFIG & PERFECT 2PX CHASING-TAIL NEON BORDER STYLE LAYOUT MATRIX
+# 1. VISUAL MATRIX LAYOUT DESIGN & PERFECT 2PX CHASING-TAIL NEON BORDER LAYOUT MATRIX
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("<style>.main { background-color:#0d0f14; color:#f8fafc; }.brand-header-box { background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; border: 1px solid #312e81; box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15); margin-bottom: 25px; text-align: center; }.brand-title { font-size: 38px !important; font-weight: 800 !important; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; }.metric-box { position: relative; background-color: #151922; padding: 24px; border-radius: 14px; margin-bottom: 20px; border: 2px solid transparent; background-clip: padding-box; overflow: hidden; z-index: 1; }.metric-box::before { content: ''; position: absolute; top: -150%; bottom: -150%; left: -150%; right: -150%; z-index: -2; animation: tail-spin-chaser 4s linear infinite; }.metric-box::after { content: ''; position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; background-color: #151922; border-radius: 12px; z-index: -1; }.glow-hold::before { background: conic-gradient(from 0deg, #ffcc00 0%, #ffcc00 15%, transparent 35%, transparent 100%); }.glow-buy::before { background: conic-gradient(from 0deg, #00ffcc 0%, #00ffcc 15%, transparent 35%, transparent 100%); }.glow-sell::before { background: conic-gradient(from 0deg, #ff4b4b 0%, #ff4b4b 15%, transparent 35%, transparent 100%); }@keyframes tail-spin-chaser { 100% { transform: rotate(360deg); } }.ai-analysis { background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; line-height: 1.5; }.news-box { background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; line-height: 1.5; }</style>", unsafe_allow_html=True)
 
@@ -22,15 +22,14 @@ if "ai_cards_cache" not in st.session_state: st.session_state.ai_cards_cache = {
 def get_ai_unscripted_card_analysis(ticker, price, target_p, pct, sig, api_key):
     if api_key == "WIPE": return (f"⏳ **AI TRADING LOG**: System tracking consolidation channels for {ticker}. Core targets holding stable near CAD ${target_p:,.2f}.", "🔄 Data Volume Analysis: Order matching profiles remain uniformly spread across active bid/ask layers.")
     url, headers = "https://groq.com", {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    prompt = f"Analyze this data and return a JSON object with exactly two keys 'strat' and 'intel'. Asset: {ticker}, Price: CAD ${price:,.2f}, Target: CAD ${target_p:,.2f}, Shift: {pct:+.2f}%, Signal: {sig}. 'strat' value must be a 1-2 sentence real-time trading log entry detailing what you (the AI portfolio tracker) are actively executing right now for your own portfolio. Prefix with '📈 **AI TRADING LOG**: ' or '📉 **AI TRADING LOG**: '. 'intel' value must be a 1-sentence data volume intelligence overview detailing order books, delta options, or whale volumes. Prefix with '📰 **Live Market Intelligence**: '. Keep it realistic and institutional. Do not mention customers."
+    prompt = f"Analyze this data and return a JSON object with keys 'strat' and 'intel'. Asset: {ticker}, Price: CAD ${price:,.2f}, Target: CAD ${target_p:,.2f}, Shift: {pct:+.2f}%, Signal: {sig}. 'strat' value must be a 1-2 sentence real-time portfolio log entry detailing what you (the AI) are doing for yourself right now so copy-traders can mimic the entry. Prefix with '📈 **AI TRADING LOG**: ' or '📉 **AI TRADING LOG**: '. 'intel' value must be a 1-sentence data volume intelligence overview. Prefix with '📰 **Live Market Intelligence**: '. Institutional tone, don't mention customers."
     payload = {"model": "llama-3.1-70b-versatile", "messages": [{"role": "user", "content": prompt}], "response_format": {"type": "json_object"}}
     try:
         req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
         with urllib.request.urlopen(req) as response:
-            res = json.loads(response.read().decode("utf-8"))
-            parsed = json.loads(res["choices"]["message"]["content"])
-            return parsed.get("strat", "Error building tracking log"), parsed.get("intel", "Error building intelligence metrics")
-    except Exception: return (f"⏳ **AI TRADING LOG**: Model maintaining its trend track baseline corridor for {ticker} near CAD ${target_p:,.2f}.", "🔄 Data Volume Intelligence: Real-time buyer and seller metrics are balanced across active book parameters.")
+            parsed = json.loads(json.loads(response.read().decode("utf-8"))["choices"][0]["message"]["content"])
+            return parsed.get("strat", "Processing log"), parsed.get("intel", "Processing intelligence metrics")
+    except: return (f"⏳ **AI TRADING LOG**: Model maintaining trend track baseline for {ticker} near CAD ${target_p:,.2f}.", "🔄 Data Volume Intelligence: Real-time buyer and seller metrics remain balanced.")
 
 def load_realtime_market_updates():
     usd_to_cad = 1.36
@@ -49,7 +48,7 @@ def load_realtime_market_updates():
                 price = float(np.nan_to_num(close_arr[-1]))
                 if price <= 0: price = float(np.nan_to_num(df["Adj close"].to_numpy().flatten()[-1]))
                 if ticker in ["NVDA", "TSLA"]: price *= usd_to_cad
-                if price <= 0: raise ValueError("Empty Array")
+                if price <= 0: raise ValueError("Empty Vector")
                 prev_close = float(np.nan_to_num(close_arr[-5])) if len(close_arr) >= 5 else price
                 pct = ((price - prev_close) / prev_close) * 100
                 target_p = price * (1.0 + (pct * 0.05 / 100))
@@ -84,3 +83,6 @@ def render_live_matrix_grid():
 render_live_matrix_grid()
 
 # ==============================================================================
+# 3. INTERACTIVE CHAT ENGINE (100% SECURE FLAT PIPELINE PASS)
+# ==============================================================================
+st.markdown("---")
