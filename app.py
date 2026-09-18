@@ -2,9 +2,59 @@ import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time, json, u
 from datetime import datetime
 import pytz
 
-# 1. PREMIUM HEADER CONFIG & PERFECT 3PX CHASING-TAIL NEON BORDER ENGINE
+# 1. PREMIUM HEADER CONFIG & WHISPER-THIN LASER CHASING-TAIL BORDER ENGINE
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
-st.markdown("<style>.main { background-color:#0d0f14; color:#f8fafc; }.brand-header-box { background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; border: 1px solid #312e81; box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15); margin-bottom: 25px; text-align: center; }.brand-title { font-size: 38px !important; font-weight: 800 !important; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; }.metric-box { position: relative; background-color: #151922; padding: 24px; border-radius: 14px; margin-bottom: 20px; border: 3px solid transparent; background-clip: padding-box; overflow: hidden; z-index: 1; }.metric-box::before { content: ''; position: absolute; top: -150%; bottom: -150%; left: -150%; right: -150%; z-index: -2; animation: tail-spin-chaser 4s linear infinite; }.metric-box::after { content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px; background-color: #151922; border-radius: 11px; z-index: -1; }.glow-hold::before { background: conic-gradient(from 0deg, #ffcc00 0%, #ffcc00 15%, transparent 35%, transparent 100%); }.glow-buy::before { background: conic-gradient(from 0deg, #00ffcc 0%, #00ffcc 15%, transparent 35%, transparent 100%); }.glow-sell::before { background: conic-gradient(from 0deg, #ff4b4b 0%, #ff4b4b 15%, transparent 35%, transparent 100%); }@keyframes tail-spin-chaser { 100% { transform: rotate(360deg); } }.ai-analysis { background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; }.news-box { background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; }</style>", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    .main { background-color:#0d0f14; color:#f8fafc; }
+    .brand-header-box { background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; border: 1px solid #312e81; box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15); margin-bottom: 25px; text-align: center; }
+    .brand-title { font-size: 38px !important; font-weight: 800 !important; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; }
+    
+    /* 🌟 DENSE HIGH-TECH SOLID METRIC CONTAINERS */
+    .metric-box {
+        position: relative;
+        background-color: #151922;
+        padding: 24px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        background-clip: padding-box;
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    /* THE SUB-PIXEL SPINNING BACKGROUND SOURCE LAYER */
+    .metric-box::before {
+        content: '';
+        position: absolute;
+        top: -150%; bottom: -150%; left: -150%; right: -150%;
+        z-index: -2;
+        animation: tail-spin-chaser 4s linear infinite;
+    }
+    
+    /* THE INNER MASK CONSOLE THAT LOCKS THE GLOW TO A WHISPER-THIN RUR CORNER EDGE */
+    .metric-box::after {
+        content: '';
+        position: absolute;
+        top: 1px; left: 1px; right: 1px; bottom: 1px;
+        background-color: #151922;
+        border-radius: 13px;
+        z-index: -1;
+    }
+    
+    /* DENSELY SLICED CONIC LASER LINE GRADIENTS (GOLD, EMERALD, CRIMSON) */
+    .glow-hold::before { background: conic-gradient(from 0deg, #ffcc00 0%, #ffcc00 5%, transparent 15%, transparent 100%); }
+    .glow-buy::before { background: conic-gradient(from 0deg, #00ffcc 0%, #00ffcc 5%, transparent 15%, transparent 100%); }
+    .glow-sell::before { background: conic-gradient(from 0deg, #ff4b4b 0%, #ff4b4b 5%, transparent 15%, transparent 100%); }
+    
+    @keyframes tail-spin-chaser {
+        100% { transform: rotate(360deg); }
+    }
+    
+    .ai-analysis { background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; }
+    .news-box { background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; }
+    </style>
+""", unsafe_allow_html=True)
 
 local_tz = pytz.timezone("America/Toronto")
 @st.fragment(run_every=1.0)
