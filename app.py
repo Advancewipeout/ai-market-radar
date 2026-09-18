@@ -178,11 +178,12 @@ def load_realtime_market_updates():
         if fx_df is not None and not fx_df.empty:
             val = fx_df["Close"].to_numpy().flatten()[-1]
             if val > 0: usd_to_cad = 1.0 / float(val)
-    except:
+    except Exception:
         usd_to_cad = 1.36
         
     api_key_target = st.secrets.get("GROQ_API_KEY", "WIPE")
     store = {}
+    
     for ticker, display_name in watchlist.items():
         try:
             df = yf.download(ticker, period="30d", interval="1d", progress=False, multi_level_index=False)
