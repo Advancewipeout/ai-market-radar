@@ -190,6 +190,7 @@ def load_realtime_market_updates():
             "sig": "🟡 HOLD / WAIT FOR CONFIRMATION", "color": "#ffcc00", "df": fake_chart_data,
             "glow": "glow-hold", "strat": "Monitoring asset metric baselines.", "intel": "Processing volume matrices."
         }
+        
         try:
             df = yf.download(ticker, period="30d", interval="1d", progress=False, multi_level_index=False)
             if df is not None and not df.empty and len(df) >= 5:
