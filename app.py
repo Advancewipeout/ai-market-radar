@@ -2,9 +2,9 @@ import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time, json, u
 from datetime import datetime
 import pytz
 
-# 1. VISUAL MATRIX LAYOUT & DYNAMIC "CHASING TAIL" GRADIENT GLOW BORDERS
+# 1. PREMIUM CODES & EXTRA-WIDE WIDE CHASING-TAIL GRADIENT BORDER LAYOUT MATRIX
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
-st.markdown("<style>.main { background-color:#0d0f14; color:#f8fafc; }.brand-header-box { background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; border: 1px solid #312e81; box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15); margin-bottom: 25px; text-align: center; }.brand-title { font-size: 38px !important; font-weight: 800 !important; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; }.metric-box { position: relative; background-color: #151922; padding: 24px; border-radius: 14px; margin-bottom: 20px; border: 2px solid transparent; background-clip: padding-box; overflow: hidden; z-index: 1; }.metric-box::before { content: ''; position: absolute; top: -150%; bottom: -50%; left: -50%; right: -50%; z-index: -2; animation: tail-spin-chaser 4s linear infinite; }.metric-box::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #151922; border-radius: 12px; z-index: -1; }.glow-hold::before { background: conic-gradient(from 0deg, #ffcc00 0%, #ffcc00 25%, transparent 40%, transparent 100%); }.glow-buy::before { background: conic-gradient(from 0deg, #00ffcc 0%, #00ffcc 25%, transparent 40%, transparent 100%); }.glow-sell::before { background: conic-gradient(from 0deg, #ff4b4b 0%, #ff4b4b 25%, transparent 40%, transparent 100%); }@keyframes tail-spin-chaser { 100% { transform: rotate(360deg); } }.ai-analysis { background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; }.news-box { background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; }</style>", unsafe_allow_html=True)
+st.markdown("<style>.main { background-color:#0d0f14; color:#f8fafc; }.brand-header-box { background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; border: 1px solid #312e81; box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15); margin-bottom: 25px; text-align: center; }.brand-title { font-size: 38px !important; font-weight: 800 !important; background: linear-gradient(90deg, #00ffcc 0%, #6366f1 50%, #ff4b4b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0px 0px 5px 0px !important; text-transform: uppercase; }.metric-box { position: relative; background-color: #151922; padding: 24px; border-radius: 14px; margin-bottom: 20px; border: 3px solid transparent; background-clip: padding-box; overflow: hidden; z-index: 1; }.metric-box::before { content: ''; position: absolute; top: -200%; bottom: -200%; left: -200%; right: -200%; z-index: -2; animation: tail-spin-chaser 4s linear infinite; }.metric-box::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #151922; border-radius: 11px; z-index: -1; }.glow-hold::before { background: conic-gradient(from 0deg, #ffcc00 0%, #ffcc00 30%, transparent 50%, transparent 100%); }.glow-buy::before { background: conic-gradient(from 0deg, #00ffcc 0%, #00ffcc 30%, transparent 50%, transparent 100%); }.glow-sell::before { background: conic-gradient(from 0deg, #ff4b4b 0%, #ff4b4b 30%, transparent 50%, transparent 100%); }@keyframes tail-spin-chaser { 100% { transform: rotate(360deg); } }.ai-analysis { background-color:#0b0f17; padding:14px; border-radius:8px; border:1px dashed #6366f1; margin-top:15px; font-size:14px; color:#cbd5e1; }.news-box { background-color:#0e111a; padding:14px; border-radius:8px; border:1px solid #1e293b; margin-top:10px; font-size:13px; color:#94a3b8; }</style>", unsafe_allow_html=True)
 
 local_tz = pytz.timezone("America/Toronto")
 @st.fragment(run_every=1.0)
@@ -19,10 +19,11 @@ if "chat_history_matrix" not in st.session_state: st.session_state.chat_history_
 
 @st.cache_data(ttl=3)
 def get_live_market_vectors():
+    usd_to_cad = 1.36
     try:
         fx_df = yf.download("CADUSD=X", period="1d", progress=False, multi_level_index=False)
-        u_to_c = 1.0 / float(fx_df["Close"].to_numpy().flatten()[-1]) if not fx_df.empty else 1.36
-    except: u_to_c = 1.36
+        if fx_df is not None and not fx_df.empty: usd_to_cad = 1.0 / float(fx_df["Close"].to_numpy().flatten()[-1])
+    except: usd_to_cad = 1.36
     store = {}
     for ticker, display_name in watchlist.items():
         try:
@@ -30,7 +31,8 @@ def get_live_market_vectors():
             if df is not None and not df.empty:
                 df.columns = [str(c).strip().capitalize() for col in [df.columns] for c in col]
                 price = float(df["Close"].to_numpy().flatten()[-1])
-                if ticker in ["NVDA", "TSLA"]: price *= u_to_c
+                if ticker in ["NVDA", "TSLA"]: price *= usd_to_cad
+                if np.isnan(price) or price <= 0: continue
                 pct = ((price - float(df["Close"].to_numpy().flatten()[-5])) / float(df["Close"].to_numpy().flatten()[-5])) * 100
                 target_p = price * (1.0 + (pct * 0.05 / 100))
                 sig, color, glow = ("🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00", "glow-hold") if abs(pct) <= 0.5 else (("🟢 STRONG BUY / ENTER LONG", "#00ffcc", "glow-buy") if pct > 0.5 else ("🔴 STRONG SELL / ENTER SHORT", "#ff4b4b", "glow-sell"))
@@ -76,7 +78,7 @@ if submit_button and user_input_text:
             url = "https://groq.com"
             headers = {"Authorization": f"Bearer {api_key_target}", "Content-Type": "application/json"}
             payload = {"model": "openai/gpt-oss-120b", "messages": [{"role": "system", "content": f"You are Smitty's financial brain. Max 2 short sentences. Live tokens: {ctx_data}"}, {"role": "user", "content": user_input_text}]}
-            try: ai_reply = json.loads(urllib.request.urlopen(urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")).read().decode("utf-8"))["choices"][0]["message"]["content"]
+            try: ai_reply = json.loads(urllib.request.urlopen(urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")).read().decode("utf-8"))["choices"]["message"]["content"]
             except Exception as e: ai_reply = f"Sync matrix parameters: {ctx_data}"
         st.write(ai_reply)
         st.session_state.chat_history_matrix.append({"role": "assistant", "content": ai_reply})
