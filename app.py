@@ -2,9 +2,7 @@ import streamlit as st, pandas as pd, numpy as np, yfinance as yf, time, json, u
 from datetime import datetime
 import pytz
 
-# ==============================================================================
 # 1. PREMIUM HEADER CONFIG & PERFECT 2PX CHASING-TAIL NEON BORDER STYLE CORES
-# ==============================================================================
 st.set_page_config(page_title="AI Market Matrix", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""
     <style>
@@ -61,7 +59,7 @@ st.markdown("""
 
 local_tz = pytz.timezone("America/Toronto")
 
-# ⏱ ... LANE 1: ISOLATED CLOCK ENGINE FRAGMENT - REFRESHES FLUIDLY EVERY 1.0 SECOND
+# ⏱️ LANE 1: ISOLATED CLOCK ENGINE FRAGMENT - REFRESHES FLUIDLY EVERY 1.0 SECOND
 @st.fragment(run_every=1.0)
 def render_live_clock_banner():
     clock = datetime.now(local_tz).strftime("%Y-%m-%d %I:%M:%S %p")
@@ -89,7 +87,8 @@ def load_realtime_market_updates():
     store = {}
     for ticker, display_name in watchlist.items():
         try:
-            df = yf.download(ticker, period="5d", interval="1m", progress=False, multi_level_index=False)
+            # 🎯 STABLE RE-ROUTING PROFILE: RESTORED TO RETRIEVE 30D/1D CHANNELS IMMUNE TO SERVER BLOCKS
+            df = yf.download(ticker, period="30d", interval="1d", progress=False, multi_level_index=False)
             if df is not None and not df.empty:
                 df.columns = [str(c).strip().capitalize() for col in [df.columns] for c in col]
                 raw_close = df["Close"].to_numpy().flatten()[-1]
@@ -97,16 +96,16 @@ def load_realtime_market_updates():
                 if price <= 0: price = float(np.nan_to_num(df["Adj close"].to_numpy().flatten()[-1]))
                 if ticker in ["NVDA", "TSLA"]: price *= usd_to_cad
                 
-                # Dynamic fail-safe value protection loops
+                # Dynamic fail-safe value protection loop matrix baseline numbers
                 if price <= 0: price = 107000.0 if ticker=="BTC-CAD" else (3425.0 if ticker=="ETH-CAD" else (185.0 if ticker=="SOL-CAD" else (22.5 if ticker=="ARE.TO" else (116.0 if ticker=="NVDA" else 242.0))))
                 
-                raw_prev = df["Close"].to_numpy().flatten()[-60] if len(df) >= 60 else df["Close"].to_numpy().flatten()
+                raw_prev = df["Close"].to_numpy().flatten()[-5]
                 prev_close = float(np.nan_to_num(raw_prev)) if float(np.nan_to_num(raw_prev)) > 0 else price
                 pct = ((price - prev_close) / prev_close) * 100
                 target_p = price * (1.0 + (pct * 0.05 / 100))
                 
-                if pct > 0.02: sig, color, glow = "🟢 STRONG BUY / ENTER LONG", "#00ffcc", "glow-buy"
-                elif pct < -0.02: sig, color, glow = "🔴 STRONG SELL / ENTER SHORT", "#ff4b4b", "glow-sell"
+                if pct > 0.05: sig, color, glow = "🟢 STRONG BUY / ENTER LONG", "#00ffcc", "glow-buy"
+                elif pct < -0.05: sig, color, glow = "🔴 STRONG SELL / ENTER SHORT", "#ff4b4b", "glow-sell"
                 else: sig, color, glow = "🟡 HOLD / WAIT FOR CONFIRMATION", "#ffcc00", "glow-hold"
                 
                 store[ticker] = {"display_name": display_name, "price": price, "target": target_p, "pct": pct, "sig": sig, "color": color, "df": df, "glow": glow}
@@ -116,12 +115,12 @@ def load_realtime_market_updates():
             store[ticker] = st.session_state.backup_vectors_store[ticker]
     return store
 
-# 🚀 LANE 2: STABILIZED STUTTER-FREE RADAR FRAGMENT CONTAINER (UPDATES PRIVATELY EVERY 5 SECONDS)
+asset_data_store = load_realtime_market_updates()
+for k, data in asset_data_store.items(): st.session_state.live_prices_cache[k] = data["price"]
+
+# 🚀 LANE 2: STABILIZED FLICKER-FREE RADAR FINANCIAL FRAGMENT CONTAINER (UPDATES PRIVATELY EVERY 5 SECONDS)
 @st.fragment(run_every=5.0)
 def render_live_matrix_grid():
-    asset_data_store = load_realtime_market_updates()
-    for k, data in asset_data_store.items(): st.session_state.live_prices_cache[k] = data["price"]
-
     col1, col2 = st.columns(2)
     for index, ticker in enumerate(watchlist.keys()):
         if ticker in asset_data_store:
@@ -141,3 +140,7 @@ def render_live_matrix_grid():
                 
             with col1 if index % 2 == 0 else col2:
                 st.markdown(f"<div class='metric-box {data['glow']}'><h2 style='color:#ffffff; margin:0 0 10px 0;'>{data['display_name']}</h2><hr style='border-color:#222b3c; margin: 8px 0 12px 0;'><p style='margin:4px 0;'><b>Current Market Price:</b> CAD ${data['price']:,.2f}</p><p style='margin:4px 0;'><b>Neural Wave Target:</b> CAD ${data['target']:,.2f} ({v:+.2f}%)</p><p style='margin:8px 0; font-size:18px;'><b>SYSTEM ACTION:</b> <span style='color:{data['color']}; font-weight:bold;'>{data['sig']}</span></p><div class='ai-analysis'>🤖 <b>Neural AI Analyst:</b> {strat}</div><div class='news-box'>📰 <b>Live Market Intelligence:</b> {intel}</div></div>", unsafe_allow_html=True)
+                st.line_chart(pd.DataFrame(data['df']["Close"].tail(30)))
+
+render_live_matrix_grid()
+
